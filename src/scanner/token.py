@@ -26,39 +26,39 @@ class Token:
     def create_assignment_token(cls: Type[T], start: int, end: int) -> T:
         return cls('ASSIGN', ':=', start, end)
 
-    def is_assignment_token(self):
+    def is_assignment_token(self) -> bool:
         return self.type == 'ASSIGN'
 
     @classmethod
     def create_colon_token(cls: Type[T], start: int, end: int) -> T:
         return cls('COLON', ':', start, end)
 
-    def is_colon_token(self):
+    def is_colon_token(self) -> bool:
         return self.type == 'COLON'
 
     @classmethod
     def create_eos_token(cls: Type[T], start: int, end: int) -> T:
         return cls('EOS', ';', start, end)
 
-    def is_eos_token(self):
+    def is_eos_token(self) -> bool:
         return self.type == 'EOS'
 
     @classmethod
-    def lexeme_is_eos(cls, lexeme: str):
+    def lexeme_is_eos(cls, lexeme: str) -> bool:
         return lexeme == ';'
 
     @classmethod
     def create_range_separator_token(cls: Type[T], start: int, end: int) -> T:
         return cls('RANGE SEPARATOR', '..', start, end)
 
-    def is_range_separator_token(self):
+    def is_range_separator_token(self) -> bool:
         return self.type == 'RANGE SEPARATOR'
 
     @classmethod
     def create_eof_token(cls: Type[T], start: int, end: int) -> T:
         return cls('EOF', 'EOF', start, end)
 
-    def is_eof_token(self):
+    def is_eof_token(self) -> bool:
         return self.type == 'EOF'
 
     @classmethod
@@ -72,7 +72,7 @@ class Token:
     def create_identifier_token(cls: Type[T], lexeme: str, start: int, end: int) -> T:
         return cls('IDENTIFIER', lexeme, start, end)
 
-    def is_identifier_token(self):
+    def is_identifier_token(self) -> bool:
         return self.type == 'IDENTIFIER'
 
     @classmethod
@@ -83,37 +83,37 @@ class Token:
     def create_keyword_token(cls: Type[T], lexeme: str, start: int, end: int) -> T:
         return cls('KEYWORD', lexeme, start, end)
 
-    def is_keyword_token(self):
+    def is_keyword_token(self) -> bool:
         return self.type == 'KEYWORD'
     
-    def is_var_token(self):
+    def is_var_token(self) -> bool:
         return self.type == 'KEYWORD' and self.lexeme == 'var'
 
-    def is_for_token(self):
+    def is_for_token(self) -> bool:
         return self.type == 'KEYWORD' and self.lexeme == 'for'
     
-    def is_end_token(self):
+    def is_end_token(self) -> bool:
         return self.type == 'KEYWORD' and self.lexeme == 'end'
 
-    def is_in_token(self):
+    def is_in_token(self) -> bool:
         return self.type == 'KEYWORD' and self.lexeme == 'in'
 
-    def is_do_token(self):
+    def is_do_token(self) -> bool:
         return self.type == 'KEYWORD' and self.lexeme == 'do'
 
-    def is_read_token(self):
+    def is_read_token(self) -> bool:
         return self.type == 'KEYWORD' and self.lexeme == 'read'
 
-    def is_print_token(self):
+    def is_print_token(self) -> bool:
         return self.type == 'KEYWORD' and self.lexeme == 'print'
 
-    def is_assert_token(self):
+    def is_assert_token(self) -> bool:
         return self.type == 'KEYWORD' and self.lexeme == 'assert'
 
-    def is_if_token(self):
+    def is_if_token(self) -> bool:
         return self.type == 'KEYWORD' and self.lexeme == 'if'
 
-    def is_else_token(self):
+    def is_else_token(self) -> bool:
         return self.type == 'KEYWORD' and self.lexeme == 'else'
 
     @classmethod
@@ -124,20 +124,20 @@ class Token:
     def create_variable_type_token(cls: Type[T], lexeme: str, start: int, end: int) -> T:
         return cls('VARIABLE TYPE', lexeme, start, end)
 
-    def is_variable_type_token(self):
+    def is_variable_type_token(self) -> bool:
         return self.type == 'VARIABLE TYPE'
     
-    def is_int_token(self):
+    def is_int_token(self) -> bool:
         return self.type == 'VARIABLE TYPE' and self.lexeme == 'int'
 
-    def is_string_token(self):
+    def is_string_token(self) -> bool:
         return self.type == 'VARIABLE TYPE' and self.lexeme == 'string'
     
-    def is_bool_token(self):
+    def is_bool_token(self) -> bool:
         return self.type == 'VARIABLE TYPE' and self.lexeme == 'bool'
     
     @classmethod
-    def lexeme_is_operator(cls, lexeme: str):
+    def lexeme_is_operator(cls, lexeme: str) -> bool:
         return lexeme in ['+', '-', '*', '/', '&', '!', '=', '<']
 
     @classmethod
@@ -145,17 +145,17 @@ class Token:
         operator_types = {'+': 'PLUS', '-': 'SUB', '*': 'MUL', '/': 'DIV', '&': 'AND', '!': 'NOT', '=': 'EQUAL', '<': 'SMALLER'}
         return cls(operator_types[lexeme], lexeme, start, end)
     
-    def is_operator_token(self):
+    def is_operator_token(self) -> bool:
         return self.type in {'PLUS': '+', 'SUB': '-', 'MUL': '*', 'DIV': '/', 'AND': '&', 'NOT': '!', 'EQUAL': "=", 'SMALLER': '<'}.keys()
     
-    def is_binary_operator(self):
+    def is_binary_operator(self) -> bool:
         return self.is_operator_token() and self.type != 'NOT'
 
-    def is_unary_operator(self):
+    def is_unary_operator(self) -> bool:
         return self.is_operator_token() and self.type == 'NOT'
     
     @classmethod
-    def lexeme_is_parenthesis(cls, lexeme: str):
+    def lexeme_is_parenthesis(cls, lexeme: str) -> bool:
         return lexeme in ['(', ')']
     
     @classmethod
@@ -163,26 +163,26 @@ class Token:
         types = {'(': 'LEFT PARENTHESIS', ')': 'RIGHT PARENTHESIS'}
         return cls(types[lexeme], lexeme, start, end)
     
-    def is_parenthesis(self):
+    def is_parenthesis(self) -> bool:
         return self.lexeme in ['(', ')']
     
-    def is_left_parenthesis(self):
+    def is_left_parenthesis(self) -> bool:
         return self.type == 'LEFT PARENTHESIS'
     
-    def is_right_parenthesis(self):
+    def is_right_parenthesis(self) -> bool:
         return self.type == 'RIGHT PARENTHESIS'
 
     @classmethod
     def create_string_literal_token(cls: Type[T], lexeme: str, start: int, end: int) -> T:
         return cls('STRING LITERAL', lexeme, start, end)
 
-    def is_string_literal(self):
+    def is_string_literal(self) -> bool:
         return self.type == 'STRING LITERAL'
     
     @classmethod
     def create_integer_literal_token(cls: Type[T], lexeme: str, start: int, end: int) -> T:
         return cls('INTEGER LITERAL', lexeme, start, end)
 
-    def is_integer_literal(self):
+    def is_integer_literal(self) -> bool:
         return self.type == 'INTEGER LITERAL'
     

@@ -1,7 +1,6 @@
-from src.scanner.scanner_helpers import * # is_end_of_multiline_comment, is_escaped_quote, is_newline, is_start_of_multiline_comment, is_end_of_multiline_comment, is_start_of_oneline_comment, is_quote, is_semicolon, is_space_or_tab
+from src.scanner.scanner_helpers import * 
 from src.parameters import Parameters
 from src.scanner.token import Token
-# from src.scanner.token import STRING
 
 class Scanner:
     def __init__(self, raw_data: str, parameters):
@@ -10,7 +9,6 @@ class Scanner:
         self.data = ""
         self.string_literals = []
         self.tokens = []
-        # self.last_token_is_consumed = True
         self.current_raw_data_line = 1 # Numbering of lines starts from 1.
         self.current_raw_data_line_start_index = 0
         self.errors_found = False
@@ -135,7 +133,6 @@ class Scanner:
                 return token              
             else:
                 token = Token.create_error_token(self.raw_data[self.current_raw_data_line_start_index:self.i + 1], f"Error in line {self.current_raw_data_line}, found in the end of this: {self.raw_data[self.current_raw_data_line_start_index:self.i + 1]}", self.i, self.i + 1)
-                # token = Token(ERROR, f"Error in line {self.current_raw_data_line}, found in the end of this: {self.raw_data[self.current_raw_data_line_start_index:self.i + 1]}", self.i, self.i + 1)
                 token.line_start = self.current_raw_data_line
                 self.append_token(token)
                 self.i += 1

@@ -113,16 +113,16 @@ def give_separator_token(data: str, i: int):
     if i < len(data) - 1:
         if data[i] == ":":
             if i < len(data) - 2 and data[i + 1] == '=':
-                return Token.create_assignment_token(i, i + 2) # Token(ASSIGN, TOKEN_VALUES[ASSIGN], i, i + 2)
+                return Token.create_assignment_token(i, i + 2) 
             else:
-                return Token.create_colon_token(i, i + 1) # Token(COLON, TOKEN_VALUES[COLON], i, i + 1)
+                return Token.create_colon_token(i, i + 1) 
         elif is_eos(data, i):
-            return Token.create_eos_token(i, i + 1) # Token(EOS, TOKEN_VALUES[EOS], i, i + 1)
+            return Token.create_eos_token(i, i + 1) 
         elif data[i] == '.':
             if i < len(data) - 2 and data[i + 1] == '.':
-                return Token.create_range_separator_token(i, i + 2) # Token(RANGESEP, TOKEN_VALUES[RANGESEP], i, i + 2)
+                return Token.create_range_separator_token(i, i + 2) 
             else:
-                return Token.create_error_token('.', "Illegal token '.'", i, i + 1)  # Token(ERROR, 'Illegal token: .', i, i + 1)
+                return Token.create_error_token('.', "Illegal token '.'", i, i + 1)  
         else:
             return None
     return None
@@ -135,14 +135,13 @@ def give_operator_token(data: str, i: int):
 
 def give_eof_token(data: str, i: int):
     if is_EOF(data, i):
-        return Token.create_eof_token(i, i + 1) # Token(EOF, EOF, i, i + 1)
+        return Token.create_eof_token(i, i + 1) 
     else:
         return None
 
 def give_parens_token(data: str, i: int):
     if is_paren(data, i):
         return Token.create_parenthesis_token(data[i], i, i + 1)
-        # return Token(TOKEN_TYPES[data[i]], data[i], i, i + 1)
     else:
         return None
 
@@ -151,11 +150,11 @@ def give_identifier_or_keyword_token(data: str, i: int):
         range_of_identifier = give_range_of_identifier(data, i)
         the_identifier = data[range_of_identifier[0]: range_of_identifier[1] + 1]
         if Token.lexeme_is_variable_type(the_identifier):
-            return Token.create_variable_type_token(the_identifier, i, i + len(the_identifier)) # Token(VAR_TYPE, the_identifier, i, i + len(the_identifier))
+            return Token.create_variable_type_token(the_identifier, i, i + len(the_identifier))
         elif Token.lexeme_is_keyword(the_identifier):
-            return Token.create_keyword_token(the_identifier, i, i + len(the_identifier)) # Token(KEYWORD, the_identifier, i, i + len(the_identifier))
+            return Token.create_keyword_token(the_identifier, i, i + len(the_identifier)) 
         else:
-            return Token.create_identifier_token(the_identifier, i, i + len(the_identifier)) # Token(IDENTIFIER, the_identifier, i, i + len(the_identifier))
+            return Token.create_identifier_token(the_identifier, i, i + len(the_identifier)) 
     else:
         return None
 
@@ -172,13 +171,11 @@ def give_string_literal_token(data: str, i: int):
                 the_start = literal_start
                 the_end = k + 1
                 return (Token.create_error_token("", "A newline inside a string literal.", the_start, the_end), True)
-                # return (Token(ERROR, "", literal_start, k + 1, "A newline inside a string literal."), True)
 
             elif data[k] == '"':
                 literal_end = k - 1
                 the_string_literal = data[literal_start:literal_end + 1]
                 return (Token.create_string_literal_token(the_string_literal, i, k + 1), False)
-                # Here the start is the index of the opening quote and the end is the index that follows the closing quote.
             else:
                 k += 1
         return None
