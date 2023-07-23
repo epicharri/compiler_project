@@ -182,7 +182,7 @@ def give_string_literal_token(data: str, i: int):
     return None
 
 def give_integer_token(data: str, i: int):
-    if is_digit(data, i): # In MiniPL, an integer constant is a sequence of decimal digits. Thus, negative integers are not supported.
+    if is_digit(data, i): # In MiniPL, an integer literal is a sequence of decimal digits. Thus, negative integer literals are not supported.
         k = i
         literal_start = k
         literal_end = k

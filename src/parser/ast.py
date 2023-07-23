@@ -8,18 +8,19 @@ class ProgramAST(AST):
         self.statements = []
 
 class VariableDeclaration(AST):
-    def __init__(self, left: AST, right: AST):
+    def __init__(self, expression: AST, variable_symbol_token: Token):
+        self.expression = expression
+        self.variable_symbol_token = variable_symbol_token
         
-        pass
 
 class BinaryOperation(AST):
     def __init__(self, left: AST, right: AST, operation_token: Token):
         self.left = left
         self.right = right
-        self.operation = operation_token.type
+        self.operation_token = operation_token
 
 class UnaryOperation(AST):
     def __init__(self, left: AST, operation_token: Token):
         self.left = left
-        self.operation = operation_token.type
+        self.token = operation_token
 

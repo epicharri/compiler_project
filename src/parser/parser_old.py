@@ -131,9 +131,9 @@ class Parser:
         pass
 
     def is_proper_start_of_statement(self) -> bool:
-        return self.current_token.is_var_token() or self.current_token.is_read_token() or self.current_token.is_for_token() or self.current_token.is_print_token() or self.current_token.is_if_token() or self.current_token.is_assert_token() or self.current_token.is_identifier_token() or self.current_token.is_eof()
+        return self.current_token.is_var_token() or self.current_token.is_read_token() or self.current_token.is_for_token() or self.current_token.is_print_token() or self.current_token.is_if_token() or self.current_token.is_assert_token() or self.current_token.is_identifier_token()
 
-    def parse_statement(self):
+    def parse_statement_list(self):
         if self.is_eof():
             return
         if self.current_token.is_var_token():
@@ -162,25 +162,15 @@ class Parser:
             self.print_error_and_forward_to_next_statement(f"An error: '{self.current_token.error_message}'.")
         else:
             self.print_error_and_forward_to_next_statement(f"A statement can not start with '{self.current_token.lexeme}'.")
+        
 
-
-    def parse_statement_list(self):
-        if self.current_token.is_eof():
-            return
-        if self.is_proper_start_of_statement():
-            self.parse_statement()
-            self.parse_statement_list()         
-        else:
-          self.print_error_and_forward_to_next_statement(f"An error while parsing the statements list.") 
 
     def parse_program(self):
         self.new_current_token()
-        if self.is_proper_start_of_statement():
+        while True:
             self.parse_statement_list()
             if self.is_eof():
-              print(f"END OF PARSING. The last token is '{self.current_token.lexeme}'")
-              return
-        else:
-            self.print_error_and_forward_to_next_statement(f"A statement can not start with '{self.current_token.lexeme}'")
+                break
+        print(f"END OF PARSING. The last token is '{self.current_token.lexeme}'")
 
 
