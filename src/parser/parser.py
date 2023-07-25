@@ -118,7 +118,24 @@ class Parser:
 
     def parse_for(self):
         self.new_current_token()
-        self.temporary_function_for_forward_to_next_statement()
+        if not self.match(self.current_token.is_identifier_token()):
+            return
+        if not self.match(self.current_token.is_in_token):
+            return
+        self.parse_expression()
+        if not self.match(self.current_token.is_range_separator_token()):
+            return
+        self.parse_expression()
+        if not self.match(self.current_token.is_do_token()):
+            return
+        if self.is_proper_start_of_statement():
+            self.parse_statement_list()
+        elif not self.match(self.current_token.is_end_token()):
+            return
+        if not self.match(self.current_token.is_for_token()):
+            return
+        self.match(self.current_token.is_eos_token())
+        
 
     def parse_print(self):
         self.match(True)
@@ -127,7 +144,19 @@ class Parser:
 
     def parse_if(self):
         self.new_current_token()
-        self.temporary_function_for_forward_to_next_statement()
+        self.parse_expression()
+        if self.match(self.current_token.is_do_token()):
+            return
+        if self.is_proper_start_of_statement():
+            self.parse_statement_list()
+        if self.current_token.is_else_token():
+            if self.is_proper_start_of_statement():
+                self.parse_statement_list()
+        if not self.match(self.current_token.is_end_token()):
+            return
+        if not self.match(self.current_token.is_if_token()):
+            return
+        self.match(self.current_token.is_eos_token())
 
     def parse_assert(self):
         self.new_current_token()

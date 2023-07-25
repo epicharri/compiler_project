@@ -1,3 +1,7 @@
+if 2 + 3 < 6 do
+print "Totta!";
+end if;
+
 fortesting := "There must be slash slash: //. And there a printed comment /*comment*/";
 multiline_string = "First row of the string 
 second row of the string."
@@ -18,7 +22,7 @@ These all should be removed.
 */
 var v : int := 1;
 var i : int;
-for i in 1..n do
+for i in 1..n-2 do
 v := (v * i);
 end for;
 print "The result is: ";
