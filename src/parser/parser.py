@@ -55,7 +55,7 @@ class Parser:
   
     def match(self, expected: bool) -> bool: # The parameter is boolean in the form self.current_token.is_something(), where is_something is a method in Token class. Returns True, if successfully matched.
         if expected:
-            print(f"MATCH SUCCESS in Token: {self.current_token}")
+            # print(f"MATCH SUCCESS in Token: {self.current_token}")
             self.new_current_token()
             return True
         else:
@@ -72,7 +72,6 @@ class Parser:
         self.new_current_token()
 
         if self.current_token.is_identifier_token():
-            print("By method in Token, this is an identifier.")
             self.match(True)
         else:
             self.print_error_and_forward_to_next_statement("There should be a variable identifier after keyword var, but found '{token.type} {token.value}'.")
@@ -82,7 +81,7 @@ class Parser:
             self.print_error_and_forward_to_next_statement(f"There must be ':' after a variable identifier in declaration, but found '{self.current_token.lexeme}'.")
             return
         self.match(True)
-        if not self.current_token.is_variable_type_token:
+        if not self.current_token.is_variable_type_token():
             self.print_error_and_forward_to_next_statement(f"Expected 'int', 'string', or 'bool', but got {self.current_token.lexeme}")
             return
         self.match(True)
@@ -102,7 +101,6 @@ class Parser:
     def parse_read(self):
         self.new_current_token()
         if self.current_token.is_identifier_token():
-            print(f"Found an identifier '{self.current_token.lexeme}'")
             self.match(True)
             self.match_eos()
         else:
@@ -130,7 +128,7 @@ class Parser:
             return
         if self.is_proper_start_of_statement():
             self.parse_statement_list()
-        elif not self.match(self.current_token.is_end_token()):
+        if not self.match(self.current_token.is_end_token()):
             return
         if not self.match(self.current_token.is_for_token()):
             return
@@ -145,7 +143,7 @@ class Parser:
     def parse_if(self):
         self.new_current_token()
         self.parse_expression()
-        if self.match(self.current_token.is_do_token()):
+        if not self.match(self.current_token.is_do_token()):
             return
         if self.is_proper_start_of_statement():
             self.parse_statement_list()
@@ -172,7 +170,6 @@ class Parser:
         if not self.match(self.current_token.is_assignment_token()):
             return
         self.parse_expression()
-        print(f"IN PARSE_VARIABLE_ASSIGNMENT: current token is '{self.current_token}'")
         self.match(self.current_token.is_eos_token())
 
 
@@ -197,8 +194,7 @@ class Parser:
     def parse_factor(self):
         if self.current_token.is_identifier_token():
             self.match(True)
-        elif self.current_token.is_integer_literal() or self.current_token.is_string_literal:
-            print(f"In parse_factor, is_integer_literal or string_literal, token = {self.current_token}")
+        elif self.current_token.is_integer_literal() or self.current_token.is_string_literal():
             self.match(True)
         elif self.current_token.is_left_parenthesis():
             self.new_current_token()
@@ -263,15 +259,17 @@ class Parser:
     def parse_statement_list(self):
         if self.current_token.is_eof_token():
             return
-        if self.is_proper_start_of_statement():
+        while self.is_proper_start_of_statement():
+            if self.current_token.is_eof_token():
+                break
             self.parse_statement()
-            self.parse_statement_list()         
-        else:
-          self.print_error_and_forward_to_next_statement(f"An error while parsing the statements list.") 
+            #self.parse_statement_list()         
+        #else:
+        #  self.print_error_and_forward_to_next_statement(f"An error while parsing the statements list.") 
 
     def parse_program(self):
         self.new_current_token()
-        if self.is_proper_start_of_statement():
+        while self.is_proper_start_of_statement() or self.is_eof():
             self.parse_statement_list()
             if self.is_eof():
               print(f"END OF PARSING. The last token is '{self.current_token.lexeme}'")
