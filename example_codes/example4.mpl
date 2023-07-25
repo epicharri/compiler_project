@@ -5,7 +5,8 @@ var y : , int; // Here is an error.
 var hk : int := 2000    ;
 var tosi : bool;
 print "Give a number";
-
+hk := hk + 20;
+assert (hk = 2020);
 var n : int; // This is a comment.
 read n;
 /* Here is a multiline

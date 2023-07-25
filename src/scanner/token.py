@@ -148,6 +148,12 @@ class Token:
     def is_operator_token(self) -> bool:
         return self.type in {'PLUS': '+', 'SUB': '-', 'MUL': '*', 'DIV': '/', 'AND': '&', 'NOT': '!', 'EQUAL': "=", 'SMALLER': '<'}.keys()
     
+    def is_multiplicative_operator(self) -> bool: # *, /, &
+        return self.type in {'MUL': '*', 'DIV': '/', 'AND': '&'}.keys()
+
+    def is_additive_operator(self) -> bool: # +, -, =, <
+        return self.type in {'PLUS': '+', 'SUB': '-', 'EQUAL': "=", 'SMALLER': '<'}.keys()
+
     def is_binary_operator(self) -> bool:
         return self.is_operator_token() and self.type != 'NOT'
 

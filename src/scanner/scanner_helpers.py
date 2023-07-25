@@ -185,15 +185,13 @@ def give_integer_token(data: str, i: int):
     if is_digit(data, i): # In MiniPL, an integer literal is a sequence of decimal digits. Thus, negative integer literals are not supported.
         k = i
         literal_start = k
-        literal_end = k
+        literal_end = k + 1
         k += 1
         while k < len(data):
-            if is_digit(data, k):
-                k += 1
-            else:
-                literal_end = k - 1
-                the_integer_literal = data[literal_start:literal_end + 1]
-                return Token.create_integer_literal_token(the_integer_literal, i, k)
+            if not is_digit(data, k):
+                literal_end = k
+                the_integer_literal = data[literal_start:literal_end]
+                return Token.create_integer_literal_token(the_integer_literal, i, literal_end) 
             k += 1
         return None           
     return None

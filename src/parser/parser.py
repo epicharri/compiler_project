@@ -53,6 +53,16 @@ class Parser:
             self.print_error_and_forward_to_next_statement(f"The end of the statement symbol ';' expected, but got '{self.current_token.lexeme}'.")   
             return False     
   
+    def match(self, expected: bool) -> bool: # The parameter is boolean in the form self.current_token.is_something(), where is_something is a method in Token class. Returns True, if successfully matched.
+        if expected:
+            print(f"MATCH SUCCESS in Token: {self.current_token}")
+            self.new_current_token()
+            return True
+        else:
+           self.print_error_and_forward_to_next_statement(f"Error in line {self.current_token.line_start}. Unexpected token '{self.current_token.lexeme}'.")
+           return False
+
+
     def is_eof(self):
         if self.current_token:
             return self.current_token.is_eof_token()
@@ -63,35 +73,46 @@ class Parser:
 
         if self.current_token.is_identifier_token():
             print("By method in Token, this is an identifier.")
+            self.match(True)
         else:
             self.print_error_and_forward_to_next_statement("There should be a variable identifier after keyword var, but found '{token.type} {token.value}'.")
             return
-        self.new_current_token()
+        # self.new_current_token()
         if not self.current_token.is_colon_token():
             self.print_error_and_forward_to_next_statement(f"There must be ':' after a variable identifier in declaration, but found '{self.current_token.lexeme}'.")
             return
-        self.new_current_token()
+        self.match(True)
         if not self.current_token.is_variable_type_token:
             self.print_error_and_forward_to_next_statement(f"Expected 'int', 'string', or 'bool', but got {self.current_token.lexeme}")
             return
-        self.new_current_token()
+        self.match(True)
         if self.current_token.is_eos_token():
-            self.new_current_token()
+            self.match(True)
+            return
+        if self.current_token.is_assignment_token():
+            self.match(True)
+            self.parse_expression()
+        if self.current_token.is_eos_token():
+            self.match(True)
+            return
+        else:
+            self.print_error_and_forward_to_next_statement(f"Semicolon was expected but got '{self.current_token.lexeme}'")
         return
 
     def parse_read(self):
         self.new_current_token()
         if self.current_token.is_identifier_token():
             print(f"Found an identifier '{self.current_token.lexeme}'")
+            self.match(True)
+            self.match_eos()
         else:
             self.print_error_and_forward_to_next_statement(f"Illegal variable name '{self.current_token.lexeme}'.")
-        self.new_current_token()
-        self.match_eos()
+
 
     def temporary_function_for_forward_to_next_statement(self):
         while not self.current_token.is_eof_token():
             if self.current_token.is_eos_token():
-                self.new_current_token()
+                self.match(True)
                 break
             self.new_current_token()
 
@@ -100,7 +121,9 @@ class Parser:
         self.temporary_function_for_forward_to_next_statement()
 
     def parse_print(self):
-        self.temporary_function_for_forward_to_next_statement()
+        self.match(True)
+        self.parse_expression()
+        self.match_eos()
 
     def parse_if(self):
         self.new_current_token()
@@ -108,21 +131,52 @@ class Parser:
 
     def parse_assert(self):
         self.new_current_token()
-        self.temporary_function_for_forward_to_next_statement()
+        if not self.match(self.current_token.is_left_parenthesis()):
+            return
+        self.parse_expression()
+        if not self.match(self.current_token.is_right_parenthesis()):
+            return
+        self.match(self.current_token.is_eos_token())
 
     def parse_variable_assignment(self):
-        self.new_current_token()
-        self.temporary_function_for_forward_to_next_statement()
+        self.match(True)
+        if not self.match(self.current_token.is_assignment_token()):
+            return
+        self.parse_expression()
+        print(f"IN PARSE_VARIABLE_ASSIGNMENT: current token is '{self.current_token}'")
+        self.match(self.current_token.is_eos_token())
+
 
     def parse_expression(self):
-        self.parse_term()
-        pass
+        if self.is_proper_start_of_operand():
+            self.parse_operand()
+            while self.current_token.is_additive_operator():
+                self.new_current_token()
+                self.parse_operand()
+        elif self.current_token.is_unary_operator():
+            self.parse_unary_operator()
+            self.parse_operand()
+        else:
+            self.print_error_and_forward_to_next_statement(f"The expression is invalid starting from '{self.current_token.lexeme}'.")
 
-    def parse_term(self):
-        pass
+    def parse_operand(self): # term
+        self.parse_factor()
+        while self.current_token.is_multiplicative_operator():
+            self.new_current_token()
+            self.parse_factor()
 
     def parse_factor(self):
-        pass
+        if self.current_token.is_identifier_token():
+            self.match(True)
+        elif self.current_token.is_integer_literal() or self.current_token.is_string_literal:
+            print(f"In parse_factor, is_integer_literal or string_literal, token = {self.current_token}")
+            self.match(True)
+        elif self.current_token.is_left_parenthesis():
+            self.new_current_token()
+            self.parse_expression()
+            self.match(self.current_token.is_right_parenthesis())
+        else:
+            self.print_error_and_forward_to_next_statement(f"An identifier, integer literal, string literal, or left parenthesis was expected but got '{self.current_token.lexeme}'.")
 
     def parse_add_op(self):
         pass
@@ -130,8 +184,21 @@ class Parser:
     def parse_mult_op(self):
         pass
 
+    def parse_not_op(self):
+        pass
+
+    def parse_and_op(self):
+        pass
+
+    # def parse_expression_tail(self):
+    #    pass
+            
+
+    def is_proper_start_of_operand(self):
+        return self.current_token.is_integer_literal() or self.current_token.is_string_literal() or self.current_token.is_identifier_token() or self.current_token.is_left_parenthesis()
+
     def is_proper_start_of_statement(self) -> bool:
-        return self.current_token.is_var_token() or self.current_token.is_read_token() or self.current_token.is_for_token() or self.current_token.is_print_token() or self.current_token.is_if_token() or self.current_token.is_assert_token() or self.current_token.is_identifier_token() or self.current_token.is_eof()
+        return self.current_token.is_var_token() or self.current_token.is_read_token() or self.current_token.is_for_token() or self.current_token.is_print_token() or self.current_token.is_if_token() or self.current_token.is_assert_token() or self.current_token.is_identifier_token() or self.current_token.is_eof_token()
 
     def parse_statement(self):
         if self.is_eof():
@@ -165,7 +232,7 @@ class Parser:
 
 
     def parse_statement_list(self):
-        if self.current_token.is_eof():
+        if self.current_token.is_eof_token():
             return
         if self.is_proper_start_of_statement():
             self.parse_statement()
