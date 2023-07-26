@@ -104,13 +104,13 @@ def is_paren(data: str, i: int):
     return None
     
 def is_eos(data: str, i: int):
-    if i < len(data) - 1:
+    if i < len(data):
         if Token.lexeme_is_eos(data[i]):
             return True
     return False
     
 def give_separator_token(data: str, i: int):
-    if i < len(data) - 1:
+    if i < len(data):
         if data[i] == ":":
             if i < len(data) - 2 and data[i + 1] == '=':
                 return Token.create_assignment_token(i, i + 2) 

@@ -16,8 +16,6 @@ class Token:
 
     def __repr__(self):
         error_message = ""
-        print(f"Token: Type = {self.type}, Lexeme = {self.lexeme},  Start character index = {self.start}, End character index = {self.end}, Line = {self.line_start} {self.error_message}")
-
         if self.error_message:
             error_message = ", Error message: " + self.error_message
         return f"Token: Type = {self.type}, Lexeme = {self.lexeme},  Start character index = {self.start}, End character index = {self.end}, Line = {self.line_start}{error_message}"

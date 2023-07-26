@@ -3,7 +3,7 @@ print "Totta!";
 end if;
 
 fortesting := "There must be slash slash: //. And there a printed comment /*comment*/";
-multiline_string = "First row of the string 
+multiline_string := "First row of the string 
 second row of the string."
 var y : , int; // Here is an error.
 var hk : int := 2000    ;
