@@ -359,19 +359,20 @@ class Parser:
             node = self.parse_statement()
             self.program_node.append_statement(node)
         if self.is_eof():
-            print("SYMBOL TABLE")
-            print(f"{self.symbol_table.symbol_table}")
-            print()
-            for st in self.program_node.statements:
-                print(st)
+            if self.scanner.parameters.print_debug_info:
+                print("SYMBOL TABLE")   
+                print(f"{self.symbol_table.symbol_table}")
                 print()
+                for st in self.program_node.statements:
+                    print(st)
+                    print()
             
-            error_info_text = "No errors found."
+                error_info_text = "No errors found."
             if self.errors_found > 0:
                 error_info_text = f"Number of errors is {self.errors_found}."
-            print(f"END OF PARSING. {error_info_text} The last token is '{self.current_token.lexeme}'")
+                print(f"END OF PARSING. {error_info_text} The last token is '{self.current_token.lexeme}'")
 
             return
-        self.print_error_and_forward_to_next_statement(f"A statement can not start with '{self.current_token.lexeme}'")
+        # self.print_error_and_forward_to_next_statement(f"A statement can not start with '{self.current_token.lexeme}'")
 
 

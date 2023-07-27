@@ -1,6 +1,7 @@
 from src.io.file_handler import read_file_to_string
 from src.scanner.scanner import Scanner
 from src.parser.parser import Parser
+from src.interpreter.interpreter import Interpreter
 from src.parameters import Parameters
 import sys
 
@@ -21,5 +22,6 @@ def compiler():
     
     scanner = Scanner(raw_data, parameters)
     parser = Parser(scanner)
-    parser.parse_program()
+    interpreter = Interpreter(parser)
+    interpreter.interpret()
 
