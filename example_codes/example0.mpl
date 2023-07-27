@@ -25,3 +25,10 @@ for XD in 20+50..ntimes-1 do
   print "Harri";
   XD := XD + 2;
 end for;
+
+var a_number : int := 1;
+var a_string : string := "";
+
+read a_number;
+read a_string;
+

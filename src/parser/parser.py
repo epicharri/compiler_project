@@ -11,9 +11,9 @@ class Parser:
         self.error_in_last_token = False
         self.for_loop_depth = 0
         self.if_block_depth = 0
-        self.current_data_type_in_expression = None
         self.symbol_table = SymbolTable()
         self.program_node = ProgramNode()
+        self.current_data_type = None
 
     
     def new_current_token(self):
@@ -69,6 +69,7 @@ class Parser:
         self.new_current_token()
         identifier_token = self.current_token
         variable_type_token = None
+
         variable_assignment_expression_root = None # AST
 
         if self.current_token.is_identifier_token():
@@ -84,14 +85,18 @@ class Parser:
             self.print_error_and_forward_to_next_statement(f"Expected 'int', 'string', or 'bool', but got {self.current_token.lexeme}")
             return None
         variable_type_token = self.current_token
+        self.current_data_type = variable_type_token.lexeme
         if not self.symbol_table.add_new_symbol_table_entry(identifier_token, variable_type_token):
             self.errors_found += 1
+            self.current_data_type = None
         self.match(True)
         if self.current_token.is_eos_token():
             node = VariableDeclarationNode(identifier_token, variable_type_token, None)
             self.match(True)
+            self.current_data_type = None
             return node
         if not self.current_token.is_assignment_token():
+            self.current_data_type = None
             return None
         self.match(True)
         variable_assignment_expression_root = self.parse_expression()
@@ -127,14 +132,25 @@ class Parser:
         for_loop_variable_token = self.current_token
         if not self.match(for_loop_variable_token.is_identifier_token()):
             return None
+        symbol_table_entry = self.symbol_table.exists_in_symbol_table(for_loop_variable_token)
+        if not symbol_table_entry:
+            return None
+        if not (symbol_table_entry.variable_type == 'int'):
+            print(f"Error in line {self.current_token.line_start}. For loop variable '{for_loop_variable_token.lexeme}' must have 'int' type.")
+            return None
+
         if not self.match(self.current_token.is_in_token):
             return None
+        self.current_data_type = 'int'
         range_start_expression_node = self.parse_expression()
         if not range_start_expression_node:
+            self.current_data_type = None
             return None
+        
         if not self.match(self.current_token.is_range_separator_token()):
             return None
         range_end_expression_node = self.parse_expression()
+        self.current_data_type = None
         if not range_end_expression_node:
             return None
         node = ForLoopNode(for_loop_variable_token, range_start_expression_node, range_end_expression_node, for_keyword_token, None)
@@ -215,21 +231,35 @@ class Parser:
         assert_node = AssertNode(assert_token, expression_node)
         return assert_node
 
-    def undeclared_variable_error(self):
-        if self.symbol_table.exists_in_symbol_table(self.current_token):
+    def undeclared_variable_error(self, token: Token = None):
+        if token == None:
+            token = self.current_token
+        if self.symbol_table.exists_in_symbol_table(token):
             return False
         else:
-            self.print_error_and_forward_to_next_statement(f"Error in line {self.current_token.line_start}. The variable {self.current_token.lexeme} is not yet declared.")
+            self.print_error_and_forward_to_next_statement(f"Error in line {token.line_start}. The variable {token.lexeme} is not yet declared.")
             return True       
+
+    def give_data_type_of_variable(self, identifier_token):
+        symbol_table_entry = self.symbol_table.exists_in_symbol_table(identifier_token)
+        if symbol_table_entry:
+            return symbol_table_entry.variable_type
+        else:
+            return None
+
 
     def parse_variable_assignment(self):
         if self.undeclared_variable_error():
             return False
+        identifier_token = self.current_token
+        self.current_data_type = self.give_data_type_of_variable(identifier_token)
         node = VariableAssignNode(self.current_token)
         self.match(True)
         if not self.match(self.current_token.is_assignment_token()):
+            self.current_data_type = None
             return False
         expression_root = self.parse_expression()
+        self.current_data_type = None
         if not expression_root:
             return None
         node.add_expression_node(expression_root)
@@ -252,11 +282,13 @@ class Parser:
         if self.is_proper_start_of_operand():
             node = self.parse_term()
             if not node:
+                self.current_data_type = None
                 return None
             while self.current_token.is_binary_operator():
                 token = self.new_current_token()
                 rhs = self.parse_term()
-                if not self.match(rhs):
+                self.current_data_type = None
+                if not self.match(rhs): # ??????????
                     return None
                 node = BinaryOperationNode(token, node, rhs)
             return node
@@ -264,6 +296,7 @@ class Parser:
             token = self.current_token
             self.new_current_token()
             lhs = self.parse_term()
+            self.current_data_type = None
             if not lhs:
                 return None
             node = UnaryOperationNode(token, lhs)
@@ -286,17 +319,46 @@ class Parser:
             lhs = bin_op_node
         return lhs
 
+    def print_wrong_data_type_error(self, token: Token = None):
+        self.errors_found += 1
+        print(f"Wrong data type in line {self.current_token.line_start}. Expected {self.current_data_type}, but '{self.current_token}' is not the same data type.")      
+        self.current_data_type = None      
+
+
     def parse_factor(self):
+        token = self.current_token
         if self.current_token.is_identifier_token():
+            if self.undeclared_variable_error():
+                self.current_data_type = None
+                return None
             e = IdentifierNode(self.current_token)
+            if self.current_data_type == None:
+                self.current_data_type = self.give_data_type_of_variable(self.current_token)
+            else:
+                if self.current_data_type != self.give_data_type_of_variable(self.current_token):
+                    if self.current_data_type != 'bool':
+                        self.print_wrong_data_type_error()
+                    return None
             self.match(True)
             return e
         if self.current_token.is_integer_literal(): 
             e = IntegerNode(self.current_token)
+            if self.current_data_type == None:
+                self.current_data_type = 'int'
+            elif self.current_data_type != 'int':
+                if self.current_data_type != 'bool':
+                    self.print_wrong_data_type_error()
+                    return None
             self.match(True)
             return e
         if self.current_token.is_string_literal(): 
             e = StringNode(self.current_token)
+            if self.current_data_type == None:
+                self.current_data_type = 'string'
+            elif self.current_data_type != 'string':
+                if self.current_data_type != 'bool':
+                    self.print_wrong_data_type_error()
+                    return None
             self.match(True)
             return e
         if self.current_token.is_left_parenthesis():
@@ -319,6 +381,8 @@ class Parser:
         return self.current_token.is_var_token() or self.current_token.is_read_token() or self.current_token.is_for_token() or self.current_token.is_print_token() or self.current_token.is_if_token() or self.current_token.is_assert_token() or self.current_token.is_identifier_token() or self.current_token.is_eof_token()
 
     def parse_statement(self):
+        self.current_data_type = None
+
         if self.is_eof():
             return True
 
@@ -371,8 +435,7 @@ class Parser:
             if self.errors_found > 0:
                 error_info_text = f"Number of errors is {self.errors_found}."
                 print(f"END OF PARSING. {error_info_text} The last token is '{self.current_token.lexeme}'")
-
-            return
-        # self.print_error_and_forward_to_next_statement(f"A statement can not start with '{self.current_token.lexeme}'")
+                return None
+            return self.program_node
 
 
