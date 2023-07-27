@@ -23,17 +23,3 @@ def compiler():
     parser = Parser(scanner)
     parser.parse_program()
 
-
-"""
-    scanner = Scanner(raw_data)
-    errors_in_tokenization = scanner.tokenize()
-
-    if print_tokens:
-        print("TOKENS:")
-        for token in scanner.tokens:
-            print(token)
-
-    if(errors_in_tokenization):
-        print("There were errors in the code.")
-        return
-"""
