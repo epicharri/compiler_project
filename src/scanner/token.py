@@ -18,7 +18,7 @@ class Token:
         error_message = ""
         if self.error_message:
             error_message = ", Error message: " + self.error_message
-        return f"Token: Type = {self.type}, Lexeme = {self.lexeme},  Start character index = {self.start}, End character index = {self.end}, Line = {self.line_start}{error_message}"
+        return f"Token: Type = '{self.type}', Lexeme = '{self.lexeme}',  Start character index = '{self.start}', End character index = '{self.end}', Line = {self.line_start}{error_message}"
     
     @classmethod
     def create_assignment_token(cls: Type[T], start: int, end: int) -> T:
@@ -184,9 +184,16 @@ class Token:
         return self.type == 'STRING LITERAL'
     
     @classmethod
+    def to_int(cls, literal: str): # Returns None, if not possible
+        try:
+            return int(literal)
+        except ValueError:
+            return None
+
+    @classmethod
     def create_integer_literal_token(cls: Type[T], lexeme: str, start: int, end: int) -> T:
         return cls('INTEGER LITERAL', lexeme, start, end)
 
     def is_integer_literal(self) -> bool:
-        return self.type == 'INTEGER LITERAL'
+        return self.type == 'INTEGER LITERAL' and self.to_int(self.lexeme)
     

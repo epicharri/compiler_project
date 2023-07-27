@@ -25,5 +25,6 @@ var i : int;
 for i in 1..n-2 do
 v := (v * i);
 end for;
+var v : string := "xd";
 print "The result is: ";
 print v;

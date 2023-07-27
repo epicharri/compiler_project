@@ -1,48 +1,23 @@
 from src.scanner.token import Token
 
-VAR_INTEGER, VAR_STRING, VAR_BOOL = "VAR_INTEGER", "VAR_STRING", "VAR_BOOL"
-
 class SymbolTableEntry():
-    def __init__(self, token: Token):
-        self.symbol = "" # Variable IDENTIFIER
-        self.type = None # Types are: VAR_INTEGER, VAR_STRING, VAR_BOOL 
+    def __init__(self, identifier_token: Token, variable_type_token: Token, assigned_value_token = None):
+        self.identifier_token = identifier_token
+        self.variable_type_token = variable_type_token
+        self.assigned_value_token = assigned_value_token
+        self.identifier = identifier_token.lexeme # Variable IDENTIFIER
+        self.variable_type = variable_type_token.lexeme # Types are: int, string, bool
         self.value = None # Value is: int, str, or bool. For example, 275, "something", False
-        self.token = token # Here is also the information of the line the token has been declared.
-
-    def set_symbol_and_type(self, symbol: str, type: str, token: Token):
-        if symbol == VAR_INTEGER:
-            self.symbol = symbol
-            self.type = VAR_INTEGER
-            self.value = 0 # Default value for integers
-            self.token = token
-        elif symbol == VAR_STRING:
-            self.symbol = symbol
-            self.type = VAR_STRING
-            self.value = "" # Default value for strings
-            self.token = token
-        elif symbol == VAR_BOOL:
-            self.symbol = symbol
-            self.type = VAR_BOOL
-            self.value = False # Default value for booleans is False
-            self.token = token
-        else:
-            print(f"ERROR: Wrong type {type}")
-
-    def set_value(self, symbol: str, value):
-        if symbol == VAR_INTEGER:
-            if type(value) == str:
-                self.value = int(value)
-            elif type(value) == int:
-                self.value = value
-        elif symbol == VAR_STRING:
-            self.value = value
-        elif symbol == VAR_BOOL:
-            if type(value) == bool:
-                self.value = value
-            else:
-                print("Value for boolean must be True of False.")
-        else:
-            print(f"ERROR: Wrong type {type}")
+        if self.identifier_token.is_identifier_token():
+            if self.variable_type_token.is_int_token():
+                self.value = 0
+            elif self.variable_type_token.is_string_token():
+                self.value = ""
+            elif self.variable_type_token.is_bool_token():
+                self.value = False 
+    
+    def __repr__(self):
+        return f"({self.identifier}, {self.variable_type}, {self.value})"
 
 class SymbolTable():
     def __init__(self):
@@ -50,15 +25,36 @@ class SymbolTable():
         # key: identifier, value: SymbolTableEntry object
         # types are INTEGER, STRING, and BOOL
         # values are stored as integers, strings and booleans (True or False).
-        # Default integer value is 0, default string value is "", and default boolean value is false.
-    
-    def get_type_and_value(self, symbol) -> tuple:
-        type_and_value = self.symbol_table.get(symbol)
-        return type_and_value # Returns None, if the key does not exist, otherwise returns (type, value)
-    
-    def add_new_symbol_and_type(self, symbol, type):
-        type_and_value = self.type_and_value(symbol)
-        if (type_and_value):
-            print(f"Error: symbol {symbol} already exists with type {type_and_value[0]} and value {type_and_value[1]}")
-            return None
-        self.symbol_table[symbol] = ()
+        # Default integer value is 0, default string value is "", and default boolean value is False.
+
+    def exists_in_symbol_table(self, identifier_token: Token):
+        symbol_table_entry = self.symbol_table.get(identifier_token.lexeme)
+        if symbol_table_entry == None:
+            return False
+        return True
+
+    def add_new_symbol_table_entry(self, identifier_token: Token, variable_type_token: Token) -> bool: # Returns True, if new symbol table entry, otherwise False.
+        symbol_table_entry = SymbolTableEntry(identifier_token, variable_type_token)
+        identifier = symbol_table_entry.identifier
+        if self.symbol_table.get(identifier) == None: # None, if does not exists.
+            self.symbol_table[identifier] = symbol_table_entry
+            return True # Successfully added a new symbol table entry
+        else:
+            existing_symbol_table_entry = self.symbol_table[identifier]
+            print(f"Error in line {symbol_table_entry.identifier_token.line_start}. The identifier {symbol_table_entry.identifier} of type {existing_symbol_table_entry.variable_type} is already declared in line {existing_symbol_table_entry.identifier_token.line_start}.")
+            return False
+
+
+    def set_new_value_to_variable_in_symbol_table_entry(self, identifier_token: Token, value) -> bool:
+        symbol_table_entry = self.symbol_table.get(identifier_token.lexeme)
+        types = {"<class 'int'>": 'int', "<class 'str'>": 'string', "<class 'bool'>": 'bool'}
+
+        if symbol_table_entry == None:
+            print(f"Error in line {identifier_token.line_start}. The identifier {identifier_token.lexeme} is not declared before the assignment.")
+            return False
+        if types[str(type(value))] != symbol_table_entry.variable_type:
+            print(f"Error in line {identifier_token.line_start}. The identifier {identifier_token.lexeme} is of type {identifier_token.lexeme}, but the value assigned is of type {types[str(type(value))]}.")
+            return False
+        symbol_table_entry.value = value
+        return True
+

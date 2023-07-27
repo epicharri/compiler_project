@@ -1,14 +1,19 @@
 from src.scanner.scanner import Scanner
 from src.scanner.token import *
+from src.parser.symbol_table import *
+from src.parser.ast import *
 
 class Parser:
     def __init__(self, scanner: Scanner):
         self.scanner = scanner
         self.current_token = None
-        self.error_found = False
+        self.errors_found = 0
         self.error_in_last_token = False
         self.for_loop_depth = 0
         self.if_block_depth = 0
+        self.current_data_type_in_expression = None
+        self.symbol_table = SymbolTable()
+        self.program_node = ProgramNode()
 
     
     def new_current_token(self):
@@ -25,7 +30,7 @@ class Parser:
     
   
     def print_error_and_forward_to_next_statement(self, error_message):
-        self.error_found = True
+        self.errors_found += 1
 
         print(f"Error in line {self.current_token.line_start}.", error_message, "The parsing continues from the next statement, after the next semicolon.")
 
@@ -41,7 +46,6 @@ class Parser:
                 break
 
 
-       
     def match_eos(self):
         if self.current_token.is_eos_token():
             self.new_current_token()
@@ -67,40 +71,56 @@ class Parser:
 
     def parse_variable_declaration(self):
         self.new_current_token()
+        identifier_token = self.current_token
+        variable_type_token = None
+        variable_assignment_expression_root = None # AST
+
         if self.current_token.is_identifier_token():
             self.match(True)
         else:
             self.print_error_and_forward_to_next_statement("There should be a variable identifier after keyword var, but found '{token.type} {token.value}'.")
-            return False
+            return None
         # self.new_current_token()
         if not self.current_token.is_colon_token():
             self.print_error_and_forward_to_next_statement(f"There must be ':' after a variable identifier in declaration, but found '{self.current_token.lexeme}'.")
-            return False
+            return None
         self.match(True)
         if not self.current_token.is_variable_type_token():
             self.print_error_and_forward_to_next_statement(f"Expected 'int', 'string', or 'bool', but got {self.current_token.lexeme}")
-            return False
+            return None
+        variable_type_token = self.current_token
+        if not self.symbol_table.add_new_symbol_table_entry(identifier_token, variable_type_token):
+            self.errors_found += 1
         self.match(True)
         if self.current_token.is_eos_token():
+            node = VariableDeclarationNode(identifier_token, variable_type_token, None)
             self.match(True)
-            return True
+            return node
         if not self.current_token.is_assignment_token():
-            return False
+            return None
         self.match(True)
-        if not self.parse_expression():
-            return False
+        variable_assignment_expression_root = self.parse_expression()
+        if not variable_assignment_expression_root:
+            return None
         if self.current_token.is_eos_token():
+            node = VariableDeclarationNode(identifier_token, variable_type_token, variable_assignment_expression_root)
             self.match(True)
-            return True
+            return node
         else:
             self.print_error_and_forward_to_next_statement(f"Semicolon was expected but got '{self.current_token.lexeme}'")
-        return False
+        return None
 
     def parse_read(self):
+        read_keyword_token = self.current_token
+        identifier_token = None
         self.new_current_token()
         if self.current_token.is_identifier_token():
+            identifier_token = self.current_token
             self.match(True)
-            return self.match_eos()
+            read_node = ReadNode(read_keyword_token, identifier_token)
+            if not self.match_eos():
+                return None
+            return read_node
         else:
             self.print_error_and_forward_to_next_statement(f"Illegal variable name '{self.current_token.lexeme}'.")
 
@@ -173,59 +193,92 @@ class Parser:
             return False
         return True
 
+    def undeclared_variable_error(self):
+        if self.symbol_table.exists_in_symbol_table(self.current_token):
+            return False
+        else:
+            self.print_error_and_forward_to_next_statement(f"Error in line {self.current_token.line_start}. The variable {self.current_token.lexeme} is not yet declared.")
+            return True       
+
     def parse_variable_assignment(self):
+        if self.undeclared_variable_error():
+            return False
+        print(f"Current data type in expression is {self.current_data_type_in_expression}")
+        node = VariableAssignNode(self.current_token)
         self.match(True)
         if not self.match(self.current_token.is_assignment_token()):
             return False
-        if not self.parse_expression():
-            return False
+        expression_root = self.parse_expression()
+        if not expression_root:
+            return None
+        node.add_expression_node(expression_root)
         if not self.match(self.current_token.is_eos_token()):
-            return False
-        return True
+            return None
+        return node
 
 
     def parse_expression(self) -> bool:
         if self.is_proper_start_of_operand():
-            if not self.parse_operand():
-                return False
+            node = self.parse_term()
+            if not node:
+                return None
             while self.current_token.is_binary_operator():
-                self.new_current_token()
-                if not self.match(self.parse_operand()):
-                    return False
-            return True
+                token = self.new_current_token()
+                rhs = self.parse_term()
+                if not self.match(rhs):
+                    return None
+                #if not self.match(self.parse_term()):
+                #    return False
+                node = BinaryOperationNode(token, node, rhs)
+            return node
         elif self.current_token.is_unary_operator():
+            token = self.current_token
             self.new_current_token()
-            if not self.parse_operand():
-                return False
-            return True
+            lhs = self.parse_term()
+            if not lhs:
+                return None
+            node = UnaryOperationNode(token, lhs)
+            return node
         else:
             self.print_error_and_forward_to_next_statement(f"The expression is invalid starting from '{self.current_token.lexeme}'.")
             return False
 
-    def parse_operand(self): # term
-        if not self.parse_factor():
-            return False
+    def parse_term(self): # term
+        lhs = self.parse_factor()
+        if not lhs:
+            return None
         while self.current_token.is_binary_operator():
+            bin_op_node = BinaryOperationNode(self.current_token)
             self.new_current_token()
-            if not self.parse_factor():
-                return False
-        return True
+            rhs = self.parse_factor()
+            if not rhs:
+                return None
+            bin_op_node.add_left_and_right_child(lhs, rhs)
+            lhs = bin_op_node
+        return lhs
 
     def parse_factor(self):
         if self.current_token.is_identifier_token():
+            e = IdentifierNode(self.current_token)
             self.match(True)
-            return True
-        if self.current_token.is_integer_literal() or self.current_token.is_string_literal():
+            return e
+        if self.current_token.is_integer_literal(): 
+            e = IntegerNode(self.current_token)
             self.match(True)
-            return True
+            return e
+        if self.current_token.is_string_literal(): 
+            e = StringNode(self.current_token)
+            self.match(True)
+            return e
         if self.current_token.is_left_parenthesis():
             self.new_current_token()
-            if not self.parse_expression():
-                return False
+            e = self.parse_expression()
+            if not e:
+                return None
             if not self.match(self.current_token.is_right_parenthesis()):
-                return False
+                return None
             else:
-                return True
+                return e
         else:
             self.print_error_and_forward_to_next_statement(f"An identifier, integer literal, string literal, or left parenthesis was expected but got '{self.current_token.lexeme}'.")
             return False
@@ -255,7 +308,9 @@ class Parser:
             return self.parse_variable_declaration()
             
         elif self.current_token.is_read_token():
-            return self.parse_read()
+            node = self.parse_read()
+            print(f"IN PARSE_STATEMENT, AFTER PARSE_READ, NODE = {node}")
+            return node
             
         elif self.current_token.is_for_token():
             return self.parse_for()
@@ -270,7 +325,10 @@ class Parser:
             return self.parse_assert()
             
         elif self.current_token.is_identifier_token():
-            return self.parse_variable_assignment()
+            node = self.parse_variable_assignment()
+            return node
+ 
+            # return self.parse_variable_assignment()
         
         elif self.current_token.is_end_token() and (self.for_loop_depth > 0 or self.if_block_depth > 0):
             return True
@@ -289,16 +347,23 @@ class Parser:
 
     def parse_statement_list(self):
         if self.current_token.is_eof_token():
-            return True
+            return self.current_token # True
         while self.is_proper_start_of_statement():
             if self.current_token.is_eof_token():
-                return True
-            if not self.parse_statement():
-                return False
+                return self.current_token # True
+            node = self.parse_statement()
+            if not node:
+                return None # False
+            else:
+                self.program_node.append_statement(node)
+            #if not self.parse_statement():
+            #    return None # False
             if self.current_token.is_end_token() and (self.for_loop_depth > 0 or self.if_block_depth > 0):
-                return True
+                print("in parse_statement_list: if self.current_token.is_end_token() and (self.for_loop_depth > 0 or self.if_block_depth > 0)")
+                return self.current_token # True
             if self.current_token.is_else_token() and self.if_block_depth > 0:
-                return True            
+                print("in parse_statement_list: if self.current_token.is_else_token() and self.if_block_depth > 0:")
+                return self.current_token # True            
 
     def parse_program(self):
         self.new_current_token()
@@ -306,9 +371,13 @@ class Parser:
             self.parse_statement_list()
             if self.is_eof():
               error_info_text = "No errors found."
-              if self.error_found:
-                  error_info_text = "Error(s) found."
+              if self.errors_found > 0:
+                  error_info_text = f"Number of errors is {self.errors_found}."
               print(f"END OF PARSING. {error_info_text} The last token is '{self.current_token.lexeme}'")
+              print("SYMBOL TABLE")
+              print(f"{self.symbol_table.symbol_table}")
+              for st in self.program_node.statements:
+                  print(st)
               return
         self.print_error_and_forward_to_next_statement(f"A statement can not start with '{self.current_token.lexeme}'")
 
