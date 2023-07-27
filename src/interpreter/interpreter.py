@@ -59,7 +59,6 @@ class Interpreter():
                 read_value = ReadAndPrint.read()
                 int_value = self.to_int(read_value)
             self.parser.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, int_value)
-        # Add to parser, that read can not be to a boolean variable.        
             
 
 

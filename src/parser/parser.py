@@ -117,6 +117,10 @@ class Parser:
         if self.current_token.is_identifier_token():
             identifier_token = self.current_token
             self.match(True)
+            symbol_table_entry = self.symbol_table.exists_in_symbol_table(identifier_token)
+            if symbol_table_entry.variable_type not in ['int', 'string']:
+                self.print_error_and_forward_to_next_statement(f"Incorrect variable data type. Variable {identifier_token.lexeme} is not of type 'int' or 'string'.")
+                return None
             read_node = ReadNode(read_keyword_token, identifier_token)
             if not self.match_eos():
                 return None

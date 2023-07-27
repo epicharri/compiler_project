@@ -28,6 +28,7 @@ end for;
 
 var a_number : int := 1;
 var a_string : string := "";
+var a_bool : bool;
 
 read a_number;
 read a_string;
