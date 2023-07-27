@@ -60,7 +60,7 @@ class Parser:
             self.new_current_token()
             return True
         else:
-           self.print_error_and_forward_to_next_statement(f"Error in line {self.current_token.line_start}. Unexpected token '{self.current_token.lexeme}'.")
+           self.print_error_and_forward_to_next_statement(f"Unexpected token '{self.current_token.lexeme}'.")
            return False
 
 
@@ -127,71 +127,99 @@ class Parser:
 
     def parse_for(self):
         self.for_loop_depth += 1
-        self.new_current_token()
-        if not self.match(self.current_token.is_identifier_token()):
-            return False
+        for_keyword_token = self.current_token
+        self.match(True)
+        for_loop_variable_token = self.current_token
+        if not self.match(for_loop_variable_token.is_identifier_token()):
+            return None
         if not self.match(self.current_token.is_in_token):
-            return False
-        if not self.parse_expression():
-            return False
+            return None
+        range_start_expression_node = self.parse_expression()
+        if not range_start_expression_node:
+            return None
         if not self.match(self.current_token.is_range_separator_token()):
-            return False
-        if not self.parse_expression():
-            return False
+            return None
+        range_end_expression_node = self.parse_expression()
+        if not range_end_expression_node:
+            return None
+        node = ForLoopNode(for_loop_variable_token, range_start_expression_node, range_end_expression_node, for_keyword_token, None)
         if not self.match(self.current_token.is_do_token()):
             return False
-        if self.is_proper_start_of_statement():
-            if not self.parse_statement_list():
-                return False
-        if not self.match(self.current_token.is_end_token()):
-            return False
+
+        while not(self.current_token.is_end_token() or self.current_token.is_eof_token()):
+            statement_node = self.parse_statement()
+            if not statement_node:
+                return None
+            node.add_statement(statement_node)
+
+        end_keyword_token = self.current_token
+        if not self.match(end_keyword_token.is_end_token()):
+            return None
         if not self.match(self.current_token.is_for_token()):
-            return False
+            return None
+        node.set_end_keyword_token(end_keyword_token)
         self.for_loop_depth -= 1
-        return self.match(self.current_token.is_eos_token())
+        if not self.match(self.current_token.is_eos_token()):
+            return None
+        return node
         
 
-    def parse_print(self):
-        self.match(True)
-        if not self.parse_expression():
-            return False
-        return self.match_eos()
-
     def parse_if(self):
+        if_token = self.current_token
         self.new_current_token()
         self.if_block_depth += 1
-        if not self.parse_expression():
-            return False
+        expression_token = self.current_token
+        expression_node = self.parse_expression()
+        if not expression_node:
+            return None
+        node = IfNode(if_token, expression_token, None, None, expression_node)
+
+        print(f"In PARSE_IF(): self.current_token is '{self.current_token}'")
         if not self.match(self.current_token.is_do_token()):
-            return False
-        if self.is_proper_start_of_statement():
-            if not self.parse_statement_list():
-                return False
+            return None
+                
+        while not(self.current_token.is_end_token() or self.current_token.is_else_token() or self.current_token.is_eof_token()):
+            statement_node = self.parse_statement()
+            if not statement_node:
+                return None
+            node.add_statement(statement_node)
+
         if self.current_token.is_else_token():
+            else_token = self.current_token
+            node.add_else_token(else_token)
             self.match(True)
-            if self.is_proper_start_of_statement():
-                if not self.parse_statement_list():
-                    return False
-        if not self.match(self.current_token.is_end_token()):
-            return False
+            while not(self.current_token.is_end_token() or self.current_token.is_eof_token()):
+                statement_node = self.parse_statement()
+                if not statement_node:
+                    return None
+                node.add_else_statement(statement_node)
+
+        end_token = self.current_token    
+
+        if not self.match(end_token.is_end_token()):
+            return None
+        node.add_end_token(end_token)
         if not self.match(self.current_token.is_if_token()):
-            return False
+            return None
         self.if_block_depth -= 1
         if not self.match(self.current_token.is_eos_token()):
-            return False
-        return True
+            return None
+        return node
 
     def parse_assert(self):
+        assert_token = self.current_token
         self.new_current_token()
         if not self.match(self.current_token.is_left_parenthesis()):
-            return False
-        if not self.parse_expression():
-            return False
+            return None
+        expression_node = self.parse_expression()
+        if not expression_node:
+            return None
         if not self.match(self.current_token.is_right_parenthesis()):
-            return False
+            return None
         if not self.match(self.current_token.is_eos_token()):
-            return False
-        return True
+            return None
+        assert_node = AssertNode(assert_token, expression_node)
+        return assert_node
 
     def undeclared_variable_error(self):
         if self.symbol_table.exists_in_symbol_table(self.current_token):
@@ -203,7 +231,6 @@ class Parser:
     def parse_variable_assignment(self):
         if self.undeclared_variable_error():
             return False
-        print(f"Current data type in expression is {self.current_data_type_in_expression}")
         node = VariableAssignNode(self.current_token)
         self.match(True)
         if not self.match(self.current_token.is_assignment_token()):
@@ -216,6 +243,17 @@ class Parser:
             return None
         return node
 
+    def parse_print(self):
+        print_keyword_token = self.current_token
+        print("in PARSE_PRINT(), just before matching 'print'")
+        self.match(True)
+        expression_root = self.parse_expression()
+        if not expression_root:
+            return None
+        if not self.match_eos():
+            return None
+        node = PrintNode(print_keyword_token, expression_root)
+        return node
 
     def parse_expression(self) -> bool:
         if self.is_proper_start_of_operand():
@@ -316,6 +354,7 @@ class Parser:
             return self.parse_for()
             
         elif self.current_token.is_print_token():
+            print("IN PARSE_STATEMENT, AFTER IS_PRINT_TOKEN()")
             return self.parse_print()
             
         elif self.current_token.is_if_token():
@@ -370,15 +409,17 @@ class Parser:
         while self.is_proper_start_of_statement() or self.is_eof():
             self.parse_statement_list()
             if self.is_eof():
-              error_info_text = "No errors found."
-              if self.errors_found > 0:
-                  error_info_text = f"Number of errors is {self.errors_found}."
-              print(f"END OF PARSING. {error_info_text} The last token is '{self.current_token.lexeme}'")
-              print("SYMBOL TABLE")
-              print(f"{self.symbol_table.symbol_table}")
-              for st in self.program_node.statements:
-                  print(st)
-              return
+                print("SYMBOL TABLE")
+                print(f"{self.symbol_table.symbol_table}")
+                for st in self.program_node.statements:
+                    print(st)
+                
+                error_info_text = "No errors found."
+                if self.errors_found > 0:
+                    error_info_text = f"Number of errors is {self.errors_found}."
+                print(f"END OF PARSING. {error_info_text} The last token is '{self.current_token.lexeme}'")
+
+                return
         self.print_error_and_forward_to_next_statement(f"A statement can not start with '{self.current_token.lexeme}'")
 
 

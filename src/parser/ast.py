@@ -75,21 +75,77 @@ class VariableAssignNode(AST):
         if isinstance(expression_root, AST):
             expression_root.set_parent_id(self.id)
         self.expression_root = expression_root
-        
-class ForLoopNode(AST):
-    def __init__(self, variable_declaration: AST, for_constant_start_expression: AST, for_constant_end_expression: AST, for_token: Token, end_for_token: Token = None):
+
+class PrintNode(AST):
+    def __init__(self, print_keyword_token: Token, expression_root: AST = None):
         super().__init__()
-        self.for_token = for_token
-        self.end_for_token = end_for_token
-        self.for_constant = variable_declaration # AST
-        self.for_constant_start_expression = for_constant_start_expression # AST
-        self.for_constant_end_expression = for_constant_end_expression # AST
+        self.print_keyword_token = print_keyword_token
+        self.expression_root = expression_root
+        if isinstance(self.expression_root, AST):
+            self.expression_root.set_parent_id(self.id)
+    
+    def __repr__(self):
+        return f"PRINT NODE: id: {self.id}. parent_id: {self.parent_id}. Print keyword: {self.print_keyword_token}. Expression root node: {self.expression_root}"    
+ 
+class AssertNode(AST):
+    def __init__(self, assert_keyword_token: Token, expression_root: AST = None):
+        super().__init__()
+        self.assert_keyword_token = assert_keyword_token
+        self.expression_root = expression_root
+        if isinstance(self.expression_root, AST):
+            self.expression_root.set_parent_id(self.id)
+    
+    def __repr__(self):
+        return f"ASSERT NODE: id: {self.id}. parent_id: {self.parent_id}. Assert keyword: {self.assert_keyword_token}. Expression root node: {self.expression_root}"    
+
+
+class ForLoopNode(AST):
+    def __init__(self, for_loop_variable_token: Token, range_start_expression_node: AST, range_end_expression_node: AST, for_keyword_token: Token, end_keyword_token: Token = None): # end_token: end keyword token
+        super().__init__()
+        self.for_loop_variable_token = for_loop_variable_token
+        self.for_keyword_token = for_keyword_token
+        self.end_keyword_token = end_keyword_token
+        self.range_start_expression_node = range_start_expression_node # AST
+        self.range_end_expression_node = range_end_expression_node # AST
         self.statements = []
     
-    def set_end_for_token(self, end_for_token: Token):
+    def set_end_keyword_token(self, end_for_token: Token):
         self.end_for_token = end_for_token
     
     def add_statement(self, statement: AST):
+        if isinstance(statement, AST):
+            statement.set_parent_id(self.id)
+        self.statements.append(statement)
+
+class IfNode(AST):
+    def __init__(self, if_token: Token, expression_token: Token, else_token: Token = None, end_token: Token = None, expression_node: AST = None):
+        super().__init__()
+        self.if_token = if_token
+        self.else_token = else_token
+        self.end_token = end_token # end_token, not if token after end token
+        self.expression_token = expression_token
+        self.expression_node = None # If expression is true, then statements, otherwise else_statements.
+        self.add_expression_node(expression_node) 
+        self.statements = []
+        self.else_statements = []
+
+    def add_end_token(self, end_token: Token):
+        self.end_token = end_token
+
+    def add_else_token(self, else_token: Token):
+        self.else_token = else_token
+
+    def add_expression_node(self, expression_node: AST):
+        self.expression_node = expression_node
+        if isinstance(self.expression_node, AST):
+            self.expression_node.set_parent_id(self.id)
+
+    def add_statement(self, statement: AST):
+        if isinstance(statement, AST):
+            statement.set_parent_id(self.id)
+        self.statements.append(statement)
+
+    def add_else_statement(self, statement: AST):
         if isinstance(statement, AST):
             statement.set_parent_id(self.id)
         self.statements.append(statement)
