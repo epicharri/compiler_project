@@ -108,7 +108,10 @@ class ForLoopNode(AST):
         self.range_start_expression_node = range_start_expression_node # AST
         self.range_end_expression_node = range_end_expression_node # AST
         self.statements = []
-    
+
+    def __repr__(self):
+        return f"FOR LOOP NODE: id: {self.id}. parent_id: {self.parent_id}. For keyword token: {self.for_keyword_token}. End keyword token: {self.end_keyword_token}. For loop variable token: {self.for_loop_variable_token}. Range start expression node: {self.range_start_expression_node}. Range end expression node: {self.range_end_expression_node}."
+
     def set_end_keyword_token(self, end_for_token: Token):
         self.end_for_token = end_for_token
     
@@ -128,6 +131,14 @@ class IfNode(AST):
         self.add_expression_node(expression_node) 
         self.statements = []
         self.else_statements = []
+
+    def __repr__(self):
+        else_keyword_printout = "No else block."
+        else_statements_printout = ""
+        if self.else_token:
+            else_keyword_printout = f"Else keyword token: {self.else_token}"
+            else_statements_printout = f"{self.else_statements}"
+        return f"IF NODE: id: {self.id}. parent_id: {self.parent_id}. If keyword token: {self.if_token}. {else_keyword_printout}. End keyword token: {self.end_token}. If condition expression node: {self.expression_node}. Statements if condition is true: {self.statements}. {else_statements_printout}"
 
     def add_end_token(self, end_token: Token):
         self.end_token = end_token

@@ -19,11 +19,9 @@ class Parser:
     def new_current_token(self):
         if not self.is_eof():
             self.current_token = self.scanner.get_next_token()
-            print("In new_current_token():", self.current_token)
+            if self.scanner.parameters.print_tokens:
+                print("New token found:", self.current_token)
     
-    def make_node(symbol: str, lexeme: str):
-        print("IN MAKE_NODE: Current token = {self.current_token}, symbol = {symbol}, lexeme = {lexeme}")
-
     
     def is_literal_or_variable_identifier(self):
         return self.current_token.is_string_literal() or self.current_token.is_integer_literal() or self.current_token.is_variable_identifier()
@@ -32,10 +30,9 @@ class Parser:
     def print_error_and_forward_to_next_statement(self, error_message):
         self.errors_found += 1
 
-        print(f"Error in line {self.current_token.line_start}.", error_message, "The parsing continues from the next statement, after the next semicolon.")
+        print(f"Error in line {self.current_token.line_start}: '{self.current_token.lexeme}'", error_message, "The parsing continues from the next statement, after the next semicolon.")
 
         while True:
-            print("IN ERROR RECOVERY!!!!!!!!!!!!!!!!!!!!!!!1")
             self.new_current_token()
             if self.current_token.is_eos_token():
                 print(f"The parsing starts again from line {self.current_token.line_start + 1}.")
@@ -56,7 +53,6 @@ class Parser:
   
     def match(self, expected: bool) -> bool: # The parameter is boolean in the form self.current_token.is_something(), where is_something is a method in Token class. Returns True, if successfully matched.
         if expected:
-            print(f"MATCH SUCCESS in Token: {self.current_token}")
             self.new_current_token()
             return True
         else:
@@ -80,7 +76,6 @@ class Parser:
         else:
             self.print_error_and_forward_to_next_statement("There should be a variable identifier after keyword var, but found '{token.type} {token.value}'.")
             return None
-        # self.new_current_token()
         if not self.current_token.is_colon_token():
             self.print_error_and_forward_to_next_statement(f"There must be ':' after a variable identifier in declaration, but found '{self.current_token.lexeme}'.")
             return None
@@ -174,7 +169,6 @@ class Parser:
             return None
         node = IfNode(if_token, expression_token, None, None, expression_node)
 
-        print(f"In PARSE_IF(): self.current_token is '{self.current_token}'")
         if not self.match(self.current_token.is_do_token()):
             return None
                 
@@ -245,7 +239,6 @@ class Parser:
 
     def parse_print(self):
         print_keyword_token = self.current_token
-        print("in PARSE_PRINT(), just before matching 'print'")
         self.match(True)
         expression_root = self.parse_expression()
         if not expression_root:
@@ -265,8 +258,6 @@ class Parser:
                 rhs = self.parse_term()
                 if not self.match(rhs):
                     return None
-                #if not self.match(self.parse_term()):
-                #    return False
                 node = BinaryOperationNode(token, node, rhs)
             return node
         elif self.current_token.is_unary_operator():
@@ -281,7 +272,7 @@ class Parser:
             self.print_error_and_forward_to_next_statement(f"The expression is invalid starting from '{self.current_token.lexeme}'.")
             return False
 
-    def parse_term(self): # term
+    def parse_term(self): 
         lhs = self.parse_factor()
         if not lhs:
             return None
@@ -321,18 +312,6 @@ class Parser:
             self.print_error_and_forward_to_next_statement(f"An identifier, integer literal, string literal, or left parenthesis was expected but got '{self.current_token.lexeme}'.")
             return False
 
-    def parse_add_op(self):
-        pass
-
-    def parse_mult_op(self):
-        pass
-
-    def parse_not_op(self):
-        pass
-
-    def parse_and_op(self):
-        pass
-
     def is_proper_start_of_operand(self):
         return self.current_token.is_integer_literal() or self.current_token.is_string_literal() or self.current_token.is_identifier_token() or self.current_token.is_left_parenthesis()
 
@@ -342,19 +321,18 @@ class Parser:
     def parse_statement(self):
         if self.is_eof():
             return True
+
         if self.current_token.is_var_token():
             return self.parse_variable_declaration()
             
         elif self.current_token.is_read_token():
             node = self.parse_read()
-            print(f"IN PARSE_STATEMENT, AFTER PARSE_READ, NODE = {node}")
             return node
             
         elif self.current_token.is_for_token():
             return self.parse_for()
             
         elif self.current_token.is_print_token():
-            print("IN PARSE_STATEMENT, AFTER IS_PRINT_TOKEN()")
             return self.parse_print()
             
         elif self.current_token.is_if_token():
@@ -366,60 +344,34 @@ class Parser:
         elif self.current_token.is_identifier_token():
             node = self.parse_variable_assignment()
             return node
- 
-            # return self.parse_variable_assignment()
-        
-        elif self.current_token.is_end_token() and (self.for_loop_depth > 0 or self.if_block_depth > 0):
-            return True
-
-        elif self.current_token.is_else_token() and self.if_block_depth > 0:
-            return True
 
         elif self.current_token.is_error_token():
-            print("ERROR TOKEN FOUND")
-            self.print_error_and_forward_to_next_statement(f"An error: '{self.current_token.error_message}'.")
+            self.print_error_and_forward_to_next_statement(f"Incorrect token. '{self.current_token.error_message}'.")
             return False
         else:
             self.print_error_and_forward_to_next_statement(f"A statement can not start with '{self.current_token.lexeme}'.")
             return False
-
-
-    def parse_statement_list(self):
-        if self.current_token.is_eof_token():
-            return self.current_token # True
-        while self.is_proper_start_of_statement():
-            if self.current_token.is_eof_token():
-                return self.current_token # True
-            node = self.parse_statement()
-            if not node:
-                return None # False
-            else:
-                self.program_node.append_statement(node)
-            #if not self.parse_statement():
-            #    return None # False
-            if self.current_token.is_end_token() and (self.for_loop_depth > 0 or self.if_block_depth > 0):
-                print("in parse_statement_list: if self.current_token.is_end_token() and (self.for_loop_depth > 0 or self.if_block_depth > 0)")
-                return self.current_token # True
-            if self.current_token.is_else_token() and self.if_block_depth > 0:
-                print("in parse_statement_list: if self.current_token.is_else_token() and self.if_block_depth > 0:")
-                return self.current_token # True            
+       
 
     def parse_program(self):
         self.new_current_token()
-        while self.is_proper_start_of_statement() or self.is_eof():
-            self.parse_statement_list()
-            if self.is_eof():
-                print("SYMBOL TABLE")
-                print(f"{self.symbol_table.symbol_table}")
-                for st in self.program_node.statements:
-                    print(st)
-                
-                error_info_text = "No errors found."
-                if self.errors_found > 0:
-                    error_info_text = f"Number of errors is {self.errors_found}."
-                print(f"END OF PARSING. {error_info_text} The last token is '{self.current_token.lexeme}'")
+        while not self.is_eof():
+            node = self.parse_statement()
+            self.program_node.append_statement(node)
+        if self.is_eof():
+            print("SYMBOL TABLE")
+            print(f"{self.symbol_table.symbol_table}")
+            print()
+            for st in self.program_node.statements:
+                print(st)
+                print()
+            
+            error_info_text = "No errors found."
+            if self.errors_found > 0:
+                error_info_text = f"Number of errors is {self.errors_found}."
+            print(f"END OF PARSING. {error_info_text} The last token is '{self.current_token.lexeme}'")
 
-                return
+            return
         self.print_error_and_forward_to_next_statement(f"A statement can not start with '{self.current_token.lexeme}'")
 
 
