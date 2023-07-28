@@ -17,6 +17,7 @@ class Interpreter():
           print("Since there are errors in the program, it is not executed.")
           return False # Errors.
         self.visit(ast)
+        print(self.parser.symbol_table.symbol_table)
 
     def raise_error(self, token: Token, msg: str):
         print(f"Error in line {token.line_start}: {msg}")
@@ -25,9 +26,10 @@ class Interpreter():
 
     def to_int(self, value: str):
         try:
-            return int(value)
+            int_value = int(value)
+            return int_value
         except ValueError:
-            return False
+            return None
 
     def visit(self, node: AST):      
         if node.node_type == NodeType.PROGRAM:
@@ -54,7 +56,7 @@ class Interpreter():
             self.parser.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, read_value)
         elif data_type == 'int':
             int_value = self.to_int(read_value)
-            while not int_value:
+            while int_value == None:
                 print(f"The input '{read_value}' is not an integer. Please give an integer.")
                 read_value = ReadAndPrint.read()
                 int_value = self.to_int(read_value)

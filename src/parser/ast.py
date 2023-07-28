@@ -107,9 +107,9 @@ class AssertNode(AST):
 
 
 class ForLoopNode(AST):
-    def __init__(self, for_loop_variable_token: Token, range_start_expression_node: AST, range_end_expression_node: AST, for_keyword_token: Token, end_keyword_token: Token = None): # end_token: end keyword token
+    def __init__(self, control_variable_token: Token, range_start_expression_node: AST, range_end_expression_node: AST, for_keyword_token: Token, end_keyword_token: Token = None): # end_token: end keyword token
         super().__init__()
-        self.for_loop_variable_token = for_loop_variable_token
+        self.control_variable_token = control_variable_token
         self.for_keyword_token = for_keyword_token
         self.end_keyword_token = end_keyword_token
         self.range_start_expression_node = range_start_expression_node # AST

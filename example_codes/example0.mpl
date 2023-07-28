@@ -29,6 +29,7 @@ end for;
 var a_number : int := 1;
 var a_string : string := "";
 var a_bool : bool;
+a_bool := !(1=1) & (2=1) & ("H" = "H");
 
 read a_number;
 read a_string;
