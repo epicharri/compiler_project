@@ -107,7 +107,15 @@ class Interpreter(Visitor):
 
     def visit_VariableDeclarationNode(self, node: AST):
         # Variable is already declared by parser. If node has assignment expression, visit it.
-        pass
+        if node.variable_assignment_expression_root == None:
+            return
+        identifier_token = node.identifier_token
+        value = self.visit(node.variable_assignment_expression_root)
+        print(f"VARIABLE DECLARATION NODE: identifier token: {identifier_token}. value: '{value}'")
+        if self.value_is_correct(identifier_token, value, "Incorrect expression."):
+            if self.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, value) == False:
+                self.raise_error(identifier_token, f"Error in line {identifier_token.line_start}. The identifier {identifier_token.lexeme} is not declared before the assignment.")
+        return
 
     def visit_VariableAssignNode(self, node: AST):
         # Visit the assignment.
@@ -116,7 +124,6 @@ class Interpreter(Visitor):
         if self.value_is_correct(node.expression_root.the_token(), value, "Incorrect expression."):
             if self.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, value) == False:
                 self.raise_error(identifier_token, f"Error in line {identifier_token.line_start}. The identifier {identifier_token.lexeme} is not declared before the assignment.")
-
         return
 
     def raise_assertion_error(self, token: Token):
@@ -136,6 +143,8 @@ class Interpreter(Visitor):
         
 
     def visit_ForLoopNode(self, node: AST):
+        for_keyword_token = node.for_keyword_token
+        
         
         pass
 
