@@ -5,8 +5,13 @@ from src.parser.ast import *
 from src.parser.parser import *
 from src.parser.node_type import *
 from src.io.read_and_print import ReadAndPrint
-       
-class Interpreter():
+
+class Visitor:
+    def visit(self, node):
+        class_name = node.__class__.__name__
+        return getattr(self, 'visit_' + class_name)(node)
+
+class Interpreter(Visitor):
     def __init__(self, parser):
         self.parser = parser
         self.errors_found = 0
@@ -31,16 +36,14 @@ class Interpreter():
         except ValueError:
             return None
 
-    def visit(self, node: AST):      
-        if node.node_type == NodeType.PROGRAM:
-            for statement_node in node.statements:
-                if statement_node.node_type == NodeType.READ:
-                    self.visit_read(statement_node)
-                    if self.errors_found > 0:
-                        return
+    def visit_ProgramNode(self, node: AST):      
+        #if node.node_type == NodeType.PROGRAM:
+        for statement_node in node.statements:
+            self.visit(statement_node)
+            if self.errors_found > 0:
+                    return
 
-
-    def visit_read(self, node):
+    def visit_ReadNode(self, node: AST):
         if not node:
             print("AST Node was empty.")
             self.errors_found += 1
@@ -61,7 +64,36 @@ class Interpreter():
                 read_value = ReadAndPrint.read()
                 int_value = self.to_int(read_value)
             self.parser.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, int_value)
-            
 
+    def visit_IdentifierNode(self, node: AST):
+        pass
 
+    def visit_VariableDeclarationNode(self, node: AST):
+        pass
 
+    def visit_VariableAssignNode(self, node: AST):
+        pass
+
+    def visit_PrintNode(self, node: AST):
+        pass
+
+    def visit_AssertNode(self, node: AST):
+        pass
+
+    def visit_ForLoopNode(self, node: AST):
+        pass
+
+    def visit_IfNode(self, node: AST):
+        pass
+
+    def visit_BinaryOperationNode(self, node: AST):
+        pass
+
+    def visit_UnaryOperationNode(self, node: AST):
+        pass
+
+    def visitIntegerNode(self, node: AST):
+        pass
+
+    def visitStringNode(self, node: AST):
+        pass

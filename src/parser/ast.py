@@ -48,7 +48,7 @@ class IdentifierNode(AST):
     def __init__(self, identifier_token: Token):
         super().__init__()
         self.identifier_token = identifier_token
-        self.node_type = NodeType.READ
+        self.node_type = NodeType.IDENTIFIER
 
     def __repr__(self):
         return f"IDENTIFIER NODE: id: {self.id}. parent_id: {self.parent_id}. {self.identifier_token}"
@@ -92,7 +92,7 @@ class PrintNode(AST):
     
     def __repr__(self):
         return f"PRINT NODE: id: {self.id}. parent_id: {self.parent_id}. Print keyword: {self.print_keyword_token}. Expression root node: {self.expression_root}"    
- 
+
 class AssertNode(AST):
     def __init__(self, assert_keyword_token: Token, expression_root: AST = None):
         super().__init__()
@@ -241,6 +241,4 @@ class StringNode(AST):
         return f"STRING NODE: id: {self.id}. parent_id: {self.parent_id}. {self.literal_token}. VALUE: {self.value}."
 
 
-class BoolNode(AST):
-    pass
 
