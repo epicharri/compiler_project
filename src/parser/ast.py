@@ -220,10 +220,10 @@ class IntegerNode(AST):
         super().__init__()
         self.literal_token = literal_token
         self.value = 0
-        if Token.to_int(literal_token.lexeme):
+        if Token.to_int(literal_token.lexeme) != None:
             self.value = Token.to_int(literal_token.lexeme)
         else:
-            print("The literal token '{literal_token.lexeme}' in line {literal_token.line_start} should be integer but is not.")
+            print(f"The literal token '{literal_token.lexeme}' in line {literal_token.line_start} should be integer but is not.")
         self.node_type = NodeType.INTEGER_LITERAL
 
     def __repr__(self):

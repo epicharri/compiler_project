@@ -37,7 +37,6 @@ class Interpreter(Visitor):
             return None
 
     def visit_ProgramNode(self, node: AST):      
-        #if node.node_type == NodeType.PROGRAM:
         for statement_node in node.statements:
             self.visit(statement_node)
             if self.errors_found > 0:

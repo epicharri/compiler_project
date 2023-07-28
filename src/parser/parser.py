@@ -292,7 +292,7 @@ class Parser:
                 token = self.new_current_token()
                 rhs = self.parse_term()
                 self.current_data_type = None
-                if not self.match(rhs): # ??????????
+                if not rhs: #
                     return None
                 node = BinaryOperationNode(token, node, rhs)
             return node

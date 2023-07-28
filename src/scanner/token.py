@@ -195,5 +195,5 @@ class Token:
         return cls('INTEGER LITERAL', lexeme, start, end)
 
     def is_integer_literal(self) -> bool:
-        return self.type == 'INTEGER LITERAL' and self.to_int(self.lexeme)
+        return self.type == 'INTEGER LITERAL' and self.to_int(self.lexeme) != None
     
