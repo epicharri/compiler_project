@@ -14,4 +14,4 @@ class NodeType(Enum):
     UNARY_OPERATION = "unary operation"
     INTEGER_LITERAL = "integer literal"
     STRING_LITERAL = "string literal"
-
+    ROOT = "root"

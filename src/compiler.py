@@ -19,6 +19,9 @@ def compiler():
             parameters.set_print_ast()
         if parameter == '--print-debug-info':
             parameters.set_print_debug_info()
+        if parameter == '--help':
+            print("To interpret a program, give the file path of the source code file as the first parameter.\nOther parameters:\n --print-tokens   To print tokens.\n --print-ast   To print AST.\n --print-debug-info   To print information during debugging.")
+            return
     
     scanner = Scanner(raw_data, parameters)
     parser = Parser(scanner)

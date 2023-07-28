@@ -14,6 +14,9 @@ class Token:
     def __eq__(self, other):
         return (self.type == other.type) and (self.lexeme == other.lexeme)
 
+    def pretty_string(self):
+        return f"Token: type '{self.type}', lexeme '{self.lexeme}', line {self.line_start}"
+
     def __repr__(self):
         error_message = ""
         if self.error_message:
@@ -151,6 +154,7 @@ class Token:
 
     def is_additive_operator(self) -> bool: # +, -, =, <
         return self.type in {'PLUS': '+', 'SUB': '-', 'EQUAL': "=", 'SMALLER': '<'}.keys()
+
 
     def is_binary_operator(self) -> bool:
         return self.is_operator_token() and self.type != 'NOT'

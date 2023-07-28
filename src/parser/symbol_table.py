@@ -71,11 +71,25 @@ class SymbolTable():
         # values are stored as integers, strings and booleans (True or False).
         # Default integer value is 0, default string value is "", and default boolean value is False.
 
+    def __repr__(self):
+        output = ""
+        for key, value in self.symbol_table.items():
+            output += f"{key}: {value}\n"
+        return output
+
     def exists_in_symbol_table(self, identifier_token: Token):
         symbol_table_entry = self.symbol_table.get(identifier_token.lexeme)
         if symbol_table_entry == None:
-            return False
+            print(f"Error in line {identifier_token.line_start}. There is not any variable '{identifier_token.lexeme}'.")
+            return None
         return symbol_table_entry
+
+    def get_value(self, identifier_token: Token):
+        symbol_table_entry = self.exists_in_symbol_table(identifier_token)
+        if symbol_table_entry == None:
+            return None
+        return symbol_table_entry.value # 
+
 
     def add_new_symbol_table_entry(self, identifier_token: Token, variable_type_token: Token) -> bool: # Returns True, if new symbol table entry, otherwise False.
         symbol_table_entry = SymbolTableEntry(identifier_token, variable_type_token)

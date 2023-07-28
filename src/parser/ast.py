@@ -1,5 +1,4 @@
 from src.scanner.token import Token
-import datetime;
 from src.parser.node_type import NodeType
 
 
@@ -10,20 +9,47 @@ class AST(object):
         self.id = AST.id
         AST.id += 1
         self.parent_id = None
-        self.node_type = None
+        self.node_type = NodeType.ROOT
+
+    def the_token(self): # Token to be print with AST node
+        return None
+
+    def get_children_nodes(self):
+        children = []
+        for key, value in vars(self).items():
+            if isinstance(value, AST):
+                children.append(value)
+        for key, value in vars(self).items():
+            if isinstance(value, list):
+                for value_item in value:
+                    if isinstance(value_item, AST):
+                        children.append(value_item)
+        return children
+
+    def pretty_print(self, indent = 0):
+        token_output = "Token: None"
+        if self.the_token():
+            token_output = self.the_token().pretty_string()
+        print('- ' * indent + f"{str(self.node_type).split('.')[-1]} id: {self.id} parent_id: {self.parent_id}. {token_output}")
+        for child in self.get_children_nodes():
+            child.pretty_print(indent = indent + 1)
         
     def set_parent_id(self, parent_id):
         self.parent_id = parent_id
 
     def get_id(self):
         return self.id
+    
+
 
 class ProgramNode(AST):
     def __init__(self):
         super().__init__()
         self.statements = []
         self.node_type = NodeType.PROGRAM
-        
+
+    def the_token(self):
+        return None
 
     def append_statement(self, statement: AST):
         if isinstance(statement, AST):
@@ -31,7 +57,10 @@ class ProgramNode(AST):
         self.statements.append(statement)
 
     def __repr__(self):
-        return str(self.statements)
+        output = ""
+        for statement in self.statements:
+            output += str(statement) + '\n'
+        return output
 
 class ReadNode(AST):
     def __init__(self, read_keyword_token: Token, identifier_token: Token):
@@ -39,10 +68,13 @@ class ReadNode(AST):
         self.read_keyword_token = read_keyword_token
         self.identifier_token = identifier_token
         self.node_type = NodeType.READ
-    
+            
     def __repr__(self):
         return f"READ NODE: id: {self.id}. parent_id: {self.parent_id}. KEYWORD: {self.read_keyword_token}, IDENTIFIER: {self.identifier_token}"
     
+    def the_token(self):
+        return self.read_keyword_token
+
 
 class IdentifierNode(AST):
     def __init__(self, identifier_token: Token):
@@ -52,6 +84,9 @@ class IdentifierNode(AST):
 
     def __repr__(self):
         return f"IDENTIFIER NODE: id: {self.id}. parent_id: {self.parent_id}. {self.identifier_token}"
+
+    def the_token(self):
+        return self.identifier_token
 
 
 class VariableDeclarationNode(AST):
@@ -63,7 +98,11 @@ class VariableDeclarationNode(AST):
         self.node_type = NodeType.VARIABLE_DECLARATION
 
     def __repr__(self):
-        return f"VARIABLE DECLARATION NODE: id: {self.id}. parent_id: {self.parent_id}. Identifier: {self.identifier_token}. Expression root node: {self.variable_assignment_expression_root}"
+        return f"VARIABLE DECLARATION NODE: id: {self.id}. parent_id: {self.parent_id}. Identifier: {self.identifier_token}. \n--Expression root node: {self.variable_assignment_expression_root}"
+    
+    def the_token(self):
+        return self.identifier_token
+
 
 
 class VariableAssignNode(AST):
@@ -74,7 +113,10 @@ class VariableAssignNode(AST):
         self.node_type = NodeType.VARIABLE_ASSIGN
 
     def __repr__(self):
-        return f"VARIABLE ASSIGN NODE: id: {self.id}. parent_id: {self.parent_id}. Identifier: {self.identifier_token}. Expression root node: {self.expression_root}"
+        return f"VARIABLE ASSIGN NODE: id: {self.id}. parent_id: {self.parent_id}. Identifier: {self.identifier_token}. \n--Expression root node: {self.expression_root}"
+
+    def the_token(self):
+        return self.identifier_token
 
     def add_expression_node(self, expression_root: AST):
         if isinstance(expression_root, AST):
@@ -91,7 +133,10 @@ class PrintNode(AST):
         self.node_type = NodeType.PRINT
     
     def __repr__(self):
-        return f"PRINT NODE: id: {self.id}. parent_id: {self.parent_id}. Print keyword: {self.print_keyword_token}. Expression root node: {self.expression_root}"    
+        return f"PRINT NODE: id: {self.id}. parent_id: {self.parent_id}. Print keyword: {self.print_keyword_token}. \n--Expression root node: {self.expression_root}"    
+
+    def the_token(self):
+        return self.print_keyword_token
 
 class AssertNode(AST):
     def __init__(self, assert_keyword_token: Token, expression_root: AST = None):
@@ -103,7 +148,10 @@ class AssertNode(AST):
         self.node_type = NodeType.ASSERT
     
     def __repr__(self):
-        return f"ASSERT NODE: id: {self.id}. parent_id: {self.parent_id}. Assert keyword: {self.assert_keyword_token}. Expression root node: {self.expression_root}"    
+        return f"ASSERT NODE: id: {self.id}. parent_id: {self.parent_id}. Assert keyword: {self.assert_keyword_token}. \n--Expression root node: {self.expression_root}"    
+
+    def the_token(self):
+        return self.assert_keyword_token
 
 
 class ForLoopNode(AST):
@@ -118,7 +166,13 @@ class ForLoopNode(AST):
         self.node_type = NodeType.FOR_LOOP
 
     def __repr__(self):
-        return f"FOR LOOP NODE: id: {self.id}. parent_id: {self.parent_id}. For keyword token: {self.for_keyword_token}. End keyword token: {self.end_keyword_token}. For loop variable token: {self.control_variable_token}. Range start expression node: {self.range_start_expression_node}. Range end expression node: {self.range_end_expression_node}."
+        output = ""
+        for statement in self.statements:
+            output += "--" + str(statement) + '\n'
+        return f"FOR LOOP NODE: id: {self.id}. parent_id: {self.parent_id}. For keyword token: {self.for_keyword_token}. End keyword token: {self.end_keyword_token}. For loop variable token: {self.control_variable_token}. \n--Range start expression node: {self.range_start_expression_node}. \n--Range end expression node: {self.range_end_expression_node}. \n{output}"
+
+    def the_token(self):
+        return self.for_keyword_token
 
     def set_end_keyword_token(self, end_for_token: Token):
         self.end_for_token = end_for_token
@@ -141,13 +195,33 @@ class IfNode(AST):
         self.else_statements = []
         self.node_type = NodeType.IF
 
+    def the_token(self):
+        return self.if_token
+
+
+    def __repr__(self):
+        else_keyword_printout = "No else block."
+        else_statements_output = ""
+
+        for statement in self.else_statements:
+            else_statements_output += "--" + str(statement) + '\n'
+
+        statements_output = ""
+        for statement in self.statements:
+            statements_output += "--" + str(statement) + '\n'
+
+        if self.else_token:
+            else_keyword_printout = f"Else keyword token: {self.else_token}"
+            else_statements_printout = f"{self.else_statements}"
+        return f"IF NODE: id: {self.id}. parent_id: {self.parent_id}. If keyword token: {self.if_token}. {else_keyword_printout}. End keyword token: {self.end_token}. \n--If condition expression node: {self.expression_node}.   \n  Statements if condition is true: {self.statements} \n Else statements:\n {else_statements_printout}"
+
     def __repr__(self):
         else_keyword_printout = "No else block."
         else_statements_printout = ""
         if self.else_token:
             else_keyword_printout = f"Else keyword token: {self.else_token}"
             else_statements_printout = f"{self.else_statements}"
-        return f"IF NODE: id: {self.id}. parent_id: {self.parent_id}. If keyword token: {self.if_token}. {else_keyword_printout}. End keyword token: {self.end_token}. If condition expression node: {self.expression_node}. Statements if condition is true: {self.statements}. {else_statements_printout}"
+        return f"IF NODE: id: {self.id}. parent_id: {self.parent_id}. If keyword token: {self.if_token}. {else_keyword_printout}. End keyword token: {self.end_token}. If condition expression node: {self.expression_node}. Statements if condition is true: {self.statements}. {else_statements_printout}"        
 
     def add_end_token(self, end_token: Token):
         self.end_token = end_token
@@ -184,6 +258,9 @@ class BinaryOperationNode(AST):
         self.operation_token = operation_token
         self.node_type = NodeType.BINARY_OPERATION
 
+    def the_token(self):
+        return self.operation_token
+
     def __repr__(self):
         left = self.left
         right = self.right
@@ -204,11 +281,14 @@ class BinaryOperationNode(AST):
 class UnaryOperationNode(AST):
     def __init__(self, operation_token: Token, left: AST):
         super().__init__()
-        self.left = left
+        self.left = left # Actually this should be right. The naming of the field is not good.
         if isinstance(self.left, AST):
             self.left.set_parent_id(self.id)
         self.operation_token = operation_token
         self.node_type = NodeType.UNARY_OPERATION
+
+    def the_token(self):
+        return self.operation_token
 
     def __repr__(self):
         return f"UNARY OPERATION NODE: id: {self.id}. parent_id: {self.parent_id}. {self.operation_token}. Left: {self.left}."
@@ -226,6 +306,9 @@ class IntegerNode(AST):
             print(f"The literal token '{literal_token.lexeme}' in line {literal_token.line_start} should be integer but is not.")
         self.node_type = NodeType.INTEGER_LITERAL
 
+    def the_token(self):
+        return self.literal_token
+
     def __repr__(self):
         return f"INTEGER NODE: id: {self.id}. parent_id: {self.parent_id}. {self.literal_token}. VALUE: {self.value}."
 
@@ -235,7 +318,10 @@ class StringNode(AST):
         super().__init__()
         self.literal_token = literal_token
         self.value = literal_token.lexeme
-        self.nodetype = NodeType.STRING_LITERAL
+        self.node_type = NodeType.STRING_LITERAL
+
+    def the_token(self):
+        return self.literal_token
 
     def __repr__(self):
         return f"STRING NODE: id: {self.id}. parent_id: {self.parent_id}. {self.literal_token}. VALUE: {self.value}."

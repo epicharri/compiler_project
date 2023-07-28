@@ -118,7 +118,7 @@ class Parser:
             identifier_token = self.current_token
             self.match(True)
             symbol_table_entry = self.symbol_table.exists_in_symbol_table(identifier_token)
-            if symbol_table_entry.variable_type not in ['int', 'string']:
+            if (symbol_table_entry == None) or (symbol_table_entry.variable_type not in ['int', 'string']):
                 self.print_error_and_forward_to_next_statement(f"Incorrect variable data type. Variable {identifier_token.lexeme} is not of type 'int' or 'string'.")
                 return None
             read_node = ReadNode(read_keyword_token, identifier_token)
@@ -137,7 +137,7 @@ class Parser:
         if not self.match(for_loop_variable_token.is_identifier_token()):
             return None
         symbol_table_entry = self.symbol_table.exists_in_symbol_table(for_loop_variable_token)
-        if not symbol_table_entry:
+        if symbol_table_entry == None:
             return None
         if not (symbol_table_entry.variable_type == 'int'):
             print(f"Error in line {self.current_token.line_start}. For loop variable '{for_loop_variable_token.lexeme}' must have 'int' type.")
@@ -238,7 +238,7 @@ class Parser:
     def undeclared_variable_error(self, token: Token = None):
         if token == None:
             token = self.current_token
-        if self.symbol_table.exists_in_symbol_table(token):
+        if self.symbol_table.exists_in_symbol_table(token) != None:
             return False
         else:
             self.print_error_and_forward_to_next_statement(f"Error in line {token.line_start}. The variable {token.lexeme} is not yet declared.")
@@ -246,7 +246,7 @@ class Parser:
 
     def give_data_type_of_variable(self, identifier_token):
         symbol_table_entry = self.symbol_table.exists_in_symbol_table(identifier_token)
-        if symbol_table_entry:
+        if symbol_table_entry != None:
             return symbol_table_entry.variable_type
         else:
             return None
@@ -364,6 +364,7 @@ class Parser:
                     self.print_wrong_data_type_error()
                     return None
             self.match(True)
+            print(f"IN PARSE_FACTOR, STRINGNODE: {e}. NodeType: {e.node_type}")
             return e
         if self.current_token.is_left_parenthesis():
             self.new_current_token()

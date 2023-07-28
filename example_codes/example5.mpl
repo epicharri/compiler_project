@@ -36,4 +36,9 @@ a_bool := !(1=1) & (2=1) & ("H" = "H");
 
 read a_number;
 read a_string;
-
+print a_number;
+print a_string;
+var ep : int := 100;
+print (4 + (8 + (6 * 2) + 5)) * 100;
+print !(2=2);
+print !(2=3);
