@@ -5,8 +5,10 @@ from src.parser.node_type import NodeType
 
 
 class AST(object):
+    id = 1
     def __init__(self):
-        self.id = self.get_id()
+        self.id = AST.id
+        AST.id += 1
         self.parent_id = None
         self.node_type = None
         
@@ -14,9 +16,7 @@ class AST(object):
         self.parent_id = parent_id
 
     def get_id(self):
-        current_time = datetime.datetime.now()
-        time_stamp = current_time.timestamp()
-        return time_stamp
+        return self.id
 
 class ProgramNode(AST):
     def __init__(self):
@@ -118,7 +118,7 @@ class ForLoopNode(AST):
         self.node_type = NodeType.FOR_LOOP
 
     def __repr__(self):
-        return f"FOR LOOP NODE: id: {self.id}. parent_id: {self.parent_id}. For keyword token: {self.for_keyword_token}. End keyword token: {self.end_keyword_token}. For loop variable token: {self.for_loop_variable_token}. Range start expression node: {self.range_start_expression_node}. Range end expression node: {self.range_end_expression_node}."
+        return f"FOR LOOP NODE: id: {self.id}. parent_id: {self.parent_id}. For keyword token: {self.for_keyword_token}. End keyword token: {self.end_keyword_token}. For loop variable token: {self.control_variable_token}. Range start expression node: {self.range_start_expression_node}. Range end expression node: {self.range_end_expression_node}."
 
     def set_end_keyword_token(self, end_for_token: Token):
         self.end_for_token = end_for_token

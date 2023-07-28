@@ -23,6 +23,7 @@ class Interpreter(Visitor):
           return False # Errors.
         self.visit(ast)
         print(self.parser.symbol_table.symbol_table)
+        print(ast)
 
     def raise_error(self, token: Token, msg: str):
         print(f"Error in line {token.line_start}: {msg}")
@@ -91,8 +92,8 @@ class Interpreter(Visitor):
     def visit_UnaryOperationNode(self, node: AST):
         pass
 
-    def visitIntegerNode(self, node: AST):
+    def visit_IntegerNode(self, node: AST):
         pass
 
-    def visitStringNode(self, node: AST):
+    def visit_StringNode(self, node: AST):
         pass
