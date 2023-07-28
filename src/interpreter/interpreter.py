@@ -71,7 +71,7 @@ class Interpreter(Visitor):
 
     def visit_ReadNode(self, node: AST):
         if node == None:
-            raise_error("AST Node was empty.")
+            self.raise_error("AST Node was empty.")
             return
         identifier_token = node.identifier_token
         identifier = identifier_token.lexeme
@@ -97,6 +97,13 @@ class Interpreter(Visitor):
         else:
             return
 
+    def visit_PrintNode(self, node: AST):
+        # visit the expression and print the value
+        value = self.visit(node.expression_root)
+        if self.value_is_correct(node.expression_root.the_token(), value, "Incorrect expression."):
+            ReadAndPrint.print(value)
+        return
+
 
     def visit_VariableDeclarationNode(self, node: AST):
         # Variable is already declared by parser. If node has assignment expression, visit it.
@@ -104,19 +111,29 @@ class Interpreter(Visitor):
 
     def visit_VariableAssignNode(self, node: AST):
         # Visit the assignment.
-        pass
-
-    def visit_PrintNode(self, node: AST):
-        # visit the expression and print the value
+        identifier_token = node.identifier_token
         value = self.visit(node.expression_root)
         if self.value_is_correct(node.expression_root.the_token(), value, "Incorrect expression."):
-            ReadAndPrint.print(value)
+            if self.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, value) == False:
+                self.raise_error(identifier_token, f"Error in line {identifier_token.line_start}. The identifier {identifier_token.lexeme} is not declared before the assignment.")
+
         return
-        
+
+    def raise_assertion_error(self, token: Token):
+        print(f"Assertion error in line {token.line_start}. The execution of the program is ended.")
+        self.errors_found += 1
+        return
 
     def visit_AssertNode(self, node: AST):
         # visit the expression and compare if true. If not, show Assertion error and stop interpreting.
-        pass
+        value = self.visit(node.expression_root)
+        if self.value_is_correct(node.expression_root.the_token(), value, "Incorrect expression."):
+            if (type(value) == type(True)) and (value == True):
+                return
+            else:
+                self.raise_assertion_error(node.the_token())
+        return
+        
 
     def visit_ForLoopNode(self, node: AST):
         
@@ -124,6 +141,8 @@ class Interpreter(Visitor):
 
     def visit_IfNode(self, node: AST):
         pass
+
+
 
     def visit_BinaryOperationNode(self, node: AST):
         left_value = self.visit(node.left)
@@ -157,7 +176,7 @@ class Interpreter(Visitor):
     def visit_UnaryOperationNode(self, node: AST):
         value = self.visit(node.left)
         if type(value) != type(True):
-            self.raise_error(node.the_token, "Not operation can be used only if the value is of type 'bool'.")
+            self.raise_error(node.the_token(), "Not operation can be used only if the value is of type 'bool'.")
             return
         if node.operation_token.type == 'NOT':
             return not value

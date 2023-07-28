@@ -15,7 +15,7 @@ hk := 1 + 2 + 3;
 var harri : string;
 harri := "Harri" + " K" + ".";
 print harri;
-assert (!(1=1));
+assert (!(!(1=1)));
 var tottako : bool;
 tottako := !(1=1);
 var ntimes : int := 150;

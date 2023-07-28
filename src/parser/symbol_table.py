@@ -109,7 +109,6 @@ class SymbolTable():
         symbol_table_entry = self.symbol_table.get(identifier_token.lexeme)
 
         if symbol_table_entry == None:
-            print(f"Error in line {identifier_token.line_start}. The identifier {identifier_token.lexeme} is not declared before the assignment.")
             return False
 
         symbol_table_entry.value = value
