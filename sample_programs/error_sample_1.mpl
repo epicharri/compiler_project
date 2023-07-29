@@ -9,10 +9,10 @@ for e in 50..60 do
   print "\n";
   var p : int;
   for p in 1..5 do
-    print "Outer loop: control variable p = ";
+    print "Inner loop: control variable p = ";
     print p;
     print "\n";
-    e := e + 2;
+    e := e + 2; // This will cause an error. Comment this line away to get the program work.
   end for;
 end for;
 
