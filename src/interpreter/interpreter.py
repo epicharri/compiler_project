@@ -38,7 +38,7 @@ class Interpreter(Visitor):
 
         self.visit(ast)
         if self.errors_found > 0:
-            print("Due to errors, the execution of the program is stopped.")
+            print("The execution of the program is stopped.")
         if self.parser.scanner.parameters.print_ast:
             print(f"Symbol table after execution\n{self.parser.symbol_table.symbol_table}")
 

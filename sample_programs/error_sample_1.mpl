@@ -7,7 +7,7 @@ for e in 50..60 do
   print "Outer loop: control variable e = ";
   print e;
   print "\n";
-  var p : int;
+  var p : int := 100; // During runtime this is ok, because the declaration is before the for loop having p as control variable.
   for p in 1..5 do
     print "Inner loop: control variable p = ";
     print p;
