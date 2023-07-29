@@ -40,6 +40,17 @@ class Parser:
                 break
             if self.current_token.is_eof_token():
                 print("The end of file reached without any semicolon after the error.")
+                if self.if_block_depth > 0 or self.for_loop_depth > 0:
+                    print("Notice that ", end="")
+                    
+                    if self.if_block_depth > 0:
+                        print(f"the number of if blocks without 'end if' is {self.if_block_depth}", end="")
+                        if self.for_loop_depth > 0:
+                            print(", and ", end="")
+                    if self.for_loop_depth > 0:
+                        print(f"the number of for loop blocks without 'end for' is {self.for_loop_depth}.")
+                    else:
+                        print(".\n")
                 break
 
 
