@@ -1,0 +1,59 @@
+The following escape characters are recognized.
+
+
+\\
+
+Backslash (\)
+
+\'
+
+Single quote (')
+
+\"
+
+Double quote (")
+
+\a
+
+ASCII Bell (BEL)
+
+\b
+
+ASCII Backspace (BS)
+
+\f
+
+ASCII Formfeed (FF)
+
+\n
+
+ASCII Linefeed (LF)
+
+\r
+
+ASCII Carriage Return (CR)
+
+\t
+
+ASCII Horizontal Tab (TAB)
+
+\v
+
+ASCII Vertical Tab (VT)
+
+
+The following escape sequences are not recognized:
+
+
+\newline
+Backslash and newline ignored
+
+\ooo
+Character with octal value ooo
+
+\xhh
+Character with hex value hh
+
+
+Source: https://docs.python.org/3.6/reference/lexical_analysis.html
+

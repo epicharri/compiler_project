@@ -14,10 +14,11 @@ def is_minus_sign(data: str, i: int):
     if i < len(data) - 1:
         return data[i] == '-'
 
-def is_escaped_quote(data: str, i: int):
+def give_escaped_character(data: str, i: int):
+    escaped_characters = {'\\a': '\a', '\\b': '\b', '\\f': '\f', '\\n': '\n', '\\r': '\r', '\\t': '\t', '\\v': '\v', '\\': '\\', '\\"': '"'}
     if i < len(data) - 1:
-        if data[i] == '\\' and data[i+1] == '"':
-            return True
+        if data[i : i + 2] in escaped_characters.keys():
+            return escaped_characters[data[i : i + 2]]
     return False
 
 def is_start_of_multiline_comment(data: str, i: int):
@@ -160,23 +161,27 @@ def give_identifier_or_keyword_token(data: str, i: int):
 
 def give_string_literal_token(data: str, i: int):
     if is_quote(data, i):
+        the_string_literal = ""
         k = i
         literal_start = k + 1
         literal_end = k
         k += 1
         while k < len(data):
-            if is_escaped_quote(data, k):
-                k += 2
+            escaped_char = give_escaped_character(data, k)
+            if escaped_char:
+                    the_string_literal += escaped_char
+                    k += 2
             elif is_newline(data, k):
                 the_start = literal_start
                 the_end = k + 1
                 return (Token.create_error_token("", "A newline inside a string literal.", the_start, the_end), True)
 
             elif data[k] == '"':
-                literal_end = k - 1
-                the_string_literal = data[literal_start:literal_end + 1]
+#                literal_end = k - 1
+#                the_string_literal = data[literal_start:literal_end + 1]
                 return (Token.create_string_literal_token(the_string_literal, i, k + 1), False)
             else:
+                the_string_literal += data[k]
                 k += 1
         return None
     return None

@@ -43,7 +43,7 @@ var ep : int := 100;
 print (4 + (8 + (6 * 2) + 5)) * 100;
 print !(2=2);
 print !(2=3);
-print "Give a number";
+print "\nGive a number\n";
 read a_number;
 if (a_number / 2) * 2 = a_number do
   print a_number;
