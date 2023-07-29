@@ -43,7 +43,7 @@ class Interpreter(Visitor):
             print(f"Symbol table after execution\n{self.parser.symbol_table.symbol_table}")
 
     def raise_error(self, token: Token, msg: str):
-        if token != None:
+        if token is not None:
             print(f"Error in line {token.line_start}: {msg}")
         else:
             print(f"Error: {msg}")
@@ -81,14 +81,14 @@ class Interpreter(Visitor):
         read_value = ReadAndPrint.read()
         data_type = symbol_table_entry.variable_type
         if data_type == 'string':
-            self.parser.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, read_value)
+            self.parser.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, read_value, node)
         elif data_type == 'int':
             int_value = self.to_int(read_value)
             while int_value == None:
                 print(f"The input '{read_value}' is not an integer. Please give an integer.")
                 read_value = ReadAndPrint.read()
                 int_value = self.to_int(read_value)
-            self.parser.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, int_value)
+            self.parser.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, int_value, node)
 
     def visit_IdentifierNode(self, node: AST):
         value = self.symbol_table.get_value(node.identifier_token)
@@ -111,10 +111,11 @@ class Interpreter(Visitor):
             return
         identifier_token = node.identifier_token
         value = self.visit(node.variable_assignment_expression_root)
-        print(f"VARIABLE DECLARATION NODE: identifier token: {identifier_token}. value: '{value}'")
         if self.value_is_correct(identifier_token, value, "Incorrect expression."):
-            if self.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, value) == False:
-                self.raise_error(identifier_token, f"Error in line {identifier_token.line_start}. The identifier {identifier_token.lexeme} is not declared before the assignment.")
+            if self.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, value, node) == False:
+                self.raise_error(identifier_token, "")
+                #self.raise_error(identifier_token, f"Error in line {identifier_token.line_start}. The identifier {identifier_token.lexeme} is not declared before the assignment.")
+                
         return
 
     def visit_VariableAssignNode(self, node: AST):
@@ -122,8 +123,8 @@ class Interpreter(Visitor):
         identifier_token = node.identifier_token
         value = self.visit(node.expression_root)
         if self.value_is_correct(node.expression_root.the_token(), value, "Incorrect expression."):
-            if self.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, value) == False:
-                self.raise_error(identifier_token, f"Error in line {identifier_token.line_start}. The identifier {identifier_token.lexeme} is not declared before the assignment.")
+            if self.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, value, node) == False:
+                self.raise_error(identifier_token, "")
         return
 
     def raise_assertion_error(self, token: Token):
@@ -144,9 +145,36 @@ class Interpreter(Visitor):
 
     def visit_ForLoopNode(self, node: AST):
         for_keyword_token = node.for_keyword_token
-        
-        
-        pass
+        end_keyword_token = node.end_keyword_token
+        control_variable_token = node.control_variable_token
+        symbol_table_entry = self.symbol_table.exists_in_symbol_table(control_variable_token)
+        if symbol_table_entry == None:
+            self.raise_error(control_variable_token, f"The control variable {control_variable_token.lexeme} in for loop starting from line {for_keyword_token.line_start} is not declared.")
+            return None
+        range_start_value = self.visit(node.range_start_expression_node)
+        range_end_value = self.visit(node.range_end_expression_node)
+        if not self.value_is_correct(node.range_start_expression_node, range_start_value, "Incorrect expression."):
+            return False
+        if not self.value_is_correct(node.range_end_expression_node, range_end_value, "Incorrect expression."):
+            return False
+        if not isinstance(range_start_value, int):
+            self.raise_error(for_keyword_token, "In for loop, the range start value is not of type 'int'.")
+            return False
+        if not isinstance(range_end_value, int):
+            self.raise_error(for_keyword_token, "In for loop, the range end value is not of type 'int'.")
+            return False
+        if not symbol_table_entry.set_as_control_variable(node):
+            self.raise_error(control_variable_token, f"The variable {control_variable_token.lexeme} is a control variable of another for loop.")
+            return False
+        if not self.symbol_table.set_new_value_to_variable_in_symbol_table_entry(control_variable_token, range_start_value, node):
+            return False
+        while symbol_table_entry.value <= range_end_value:
+            for statement_node in node.statements:
+                self.visit(statement_node)
+            if not symbol_table_entry.increment_control_variable(node):
+                self.raise_error(control_variable_token, f"Error: It is forbidden to change the value of a for loop control variable.")
+                return False
+        symbol_table_entry.unset_as_control_variable(node)
 
     def visit_IfNode(self, node: AST):
         pass

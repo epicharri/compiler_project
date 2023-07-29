@@ -22,8 +22,8 @@ var ntimes : int := 150;
 var aa : int := 0;
 var XD : int;
 for XD in 20+50..ntimes-1 do
-  print "Harri";
-  XD := XD + 2;
+//  XD := XD + 2;
+  print XD;
   for aa in 1..10 do
     hk := aa;
   end for;

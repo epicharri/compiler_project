@@ -10,8 +10,9 @@ class SymbolTableEntry():
         self.identifier = identifier_token.lexeme # Variable IDENTIFIER
         self.variable_type = variable_type_token.lexeme # Types are: int, string, bool
         self.for_loop_node = None # If set, then self.value is a control variable. Control variables can not be assigned a new value. This is set in the beginning of for loop, and cleared in 'end for'.
-        
-        self._value = None # Value is: int, str, or bool. For example, 275, "something", False
+        self.is_control_variable = False
+
+        self.value = None # Value is: int, str, or bool. For example, 275, "something", False
         if self.identifier_token.is_identifier_token():
             if self.variable_type_token.is_int_token():
                 self.value = 0
@@ -25,33 +26,44 @@ class SymbolTableEntry():
         return f"({self.identifier}, {self.variable_type}, {self.value})"
 
     def set_as_control_variable(self, for_loop_node: AST):
+        if self.is_control_variable:
+            return False
         self.for_loop_node = for_loop_node # ForLoopNode owning the control variable.
+        self.is_control_variable = True
+        return True
 
-    def unset_as_control_variable(self):
-        self.for_loop_node = None
+    def unset_as_control_variable(self, for_loop_node: AST):
+        if self.for_loop_node and (self.for_loop_node.get_id() == for_loop_node.get_id()):
+            self.for_loop_node = None
+            self.is_control_variable = False
+        else:
+            return False
 
-    @property
-    def value(self):
-        return self._value
+    #@property
+    #def value(self):
+    #    return self._value
 
-    @value.setter
-    def value(self, new_value, for_loop_node: AST = None):
+    #@value.setter
+    #def value(self, new_value):
+    #    print("Do not use this for setting a value.")
+
+    #@value.setter
+    def set_value(self, new_value, for_loop_node: AST):
         if not self.is_correct_data_type(self.identifier_token, new_value):
             return False
-        if (self.for_loop_node == None) or (for_loop_node.get_id() == self.for_loop_node.get_id()):
-            self._value = new_value
+        if (self.for_loop_node == None) or (for_loop_node == None) or (for_loop_node.get_id() == self.for_loop_node.get_id()):
+            self.value = new_value
             return True # success
         else:
             control_variable_token = self.for_loop_node.control_variable_token
             print(f"Error: Trying to change the control variable '{control_variable_token.lexeme}' inside the for loop starting on line '{control_variable_token.line_start}'. The value of a for loop control variable can not be changed.")
             return False
 
-    @value.setter
+#    @value.setter
     def increment_control_variable(self, for_loop_node: AST):
         if (self.for_loop_node == None) or (for_loop_node.get_id() == self.for_loop_node.get_id()):
-            self._value += 1
+            self.value += 1
             return True
-        print(f"Error: The value of a for loop control variable can not be changed.")
         return False
 
     def is_correct_data_type(self, given_identifier_token: Token, value):
@@ -104,14 +116,15 @@ class SymbolTable():
         
 
 
-    def set_new_value_to_variable_in_symbol_table_entry(self, identifier_token: Token, value) -> bool:
+    def set_new_value_to_variable_in_symbol_table_entry(self, identifier_token: Token, value, node: AST) -> bool:
 
         symbol_table_entry = self.symbol_table.get(identifier_token.lexeme)
 
-        if symbol_table_entry == None:
+        if symbol_table_entry is None:
+            print(f"Error in line {identifier_token.line_start}. The identifier {identifier_token.lexeme} is not declared before the assignment.")
             return False
+        return symbol_table_entry.set_value(value, node)
 
-        symbol_table_entry.value = value
     
         return True
 
