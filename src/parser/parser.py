@@ -280,7 +280,7 @@ class Parser:
         expression_root = self.parse_expression()
         if not expression_root:
             return None
-        if not self.match_eos():
+        if not self.match(self.current_token.is_eos_token()):
             return None
         node = PrintNode(print_keyword_token, expression_root)
         return node
@@ -291,8 +291,9 @@ class Parser:
             if not node:
                 self.current_data_type = None
                 return None
-            while self.current_token.is_binary_operator():
-                token = self.new_current_token()
+            while self.current_token.is_addition_operator():
+                token = self.current_token
+                self.match(True)
                 rhs = self.parse_term()
                 self.current_data_type = None
                 if not rhs: #
@@ -316,7 +317,7 @@ class Parser:
         lhs = self.parse_factor()
         if not lhs:
             return None
-        while self.current_token.is_binary_operator():
+        while self.current_token.is_multiplication_operator():
             bin_op_node = BinaryOperationNode(self.current_token)
             self.new_current_token()
             rhs = self.parse_factor()
@@ -391,7 +392,7 @@ class Parser:
         self.current_data_type = None
 
         if self.is_eof():
-            return True
+            return None
 
         if self.current_token.is_var_token():
             return self.parse_variable_declaration()
@@ -428,6 +429,8 @@ class Parser:
         self.new_current_token()
         while not self.is_eof():
             node = self.parse_statement()
+            if node == None:
+                break
             self.program_node.append_statement(node)
         if self.is_eof():
             if self.scanner.parameters.print_debug_info:

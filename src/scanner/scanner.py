@@ -64,9 +64,7 @@ class Scanner:
     def append_token(self, token: Token):
         self.i = token.end
         self.tokens.append(token)
-        self.parameters.print_token(token)
         self.print_error_if_any()
-
 
 
     def get_next_token(self):
