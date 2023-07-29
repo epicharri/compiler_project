@@ -52,3 +52,7 @@ else
   print a_number;
   print " is odd.\n";
 end if;
+
+print "First line of the string.\nSecond line of the string.\n";
+print "\a\b\f\n\r\t\v\"";
+print "start\\end";

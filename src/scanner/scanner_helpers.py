@@ -15,7 +15,7 @@ def is_minus_sign(data: str, i: int):
         return data[i] == '-'
 
 def give_escaped_character(data: str, i: int):
-    escaped_characters = {'\\a': '\a', '\\b': '\b', '\\f': '\f', '\\n': '\n', '\\r': '\r', '\\t': '\t', '\\v': '\v', '\\': '\\', '\\"': '"'}
+    escaped_characters = {'\\a': '\a', '\\b': '\b', '\\f': '\f', '\\n': '\n', '\\r': '\r', '\\t': '\t', '\\v': '\v', '\\\\': "\\", '\\"': '\"'}
     if i < len(data) - 1:
         if data[i : i + 2] in escaped_characters.keys():
             return escaped_characters[data[i : i + 2]]
@@ -177,8 +177,6 @@ def give_string_literal_token(data: str, i: int):
                 return (Token.create_error_token("", "A newline inside a string literal.", the_start, the_end), True)
 
             elif data[k] == '"':
-#                literal_end = k - 1
-#                the_string_literal = data[literal_start:literal_end + 1]
                 return (Token.create_string_literal_token(the_string_literal, i, k + 1), False)
             else:
                 the_string_literal += data[k]
