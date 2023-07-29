@@ -114,7 +114,6 @@ class Interpreter(Visitor):
         if self.value_is_correct(identifier_token, value, "Incorrect expression."):
             if self.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, value, node) == False:
                 self.raise_error(identifier_token, "")
-                #self.raise_error(identifier_token, f"Error in line {identifier_token.line_start}. The identifier {identifier_token.lexeme} is not declared before the assignment.")
                 
         return
 
@@ -177,7 +176,21 @@ class Interpreter(Visitor):
         symbol_table_entry.unset_as_control_variable(node)
 
     def visit_IfNode(self, node: AST):
-        pass
+        if_token = node.if_token
+        expression_node = node.expression_node
+        condition_value = self.visit(expression_node)
+        if not self.value_is_correct(expression_node, condition_value, "Incorrect expression."):
+            return False
+        if not isinstance(condition_value, bool):
+            self.raise_error(if_token, "Type error in the condition expression of the if statement.")
+            return False
+        if condition_value:
+            for statement_node in node.statements:
+                self.visit(statement_node)
+        else:
+            for statement_node in node.else_statements:
+                self.visit(statement_node)
+
 
 
 

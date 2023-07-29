@@ -8,6 +8,6 @@ class ReadAndPrint():
     
     @classmethod
     def print(cls, value):
-        print(value)
+        print(value, end="")
 
     

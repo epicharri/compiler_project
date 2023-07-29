@@ -56,7 +56,7 @@ class SymbolTableEntry():
             return True # success
         else:
             control_variable_token = self.for_loop_node.control_variable_token
-            print(f"Error: Trying to change the control variable '{control_variable_token.lexeme}' inside the for loop starting on line '{control_variable_token.line_start}'. The value of a for loop control variable can not be changed.")
+            print(f"Error: Trying to change the control variable '{control_variable_token.lexeme}' of the for loop which starts on line '{control_variable_token.line_start}'. The value of a for loop control variable is not allowed to be changed.")
             return False
 
 #    @value.setter

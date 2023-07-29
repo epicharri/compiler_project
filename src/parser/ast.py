@@ -242,7 +242,7 @@ class IfNode(AST):
     def add_else_statement(self, statement: AST):
         if isinstance(statement, AST):
             statement.set_parent_id(self.id)
-        self.statements.append(statement)
+        self.else_statements.append(statement)
 
 
 

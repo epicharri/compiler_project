@@ -192,7 +192,9 @@ class Parser:
         if not self.match(self.current_token.is_do_token()):
             return None
                 
-        while not(self.current_token.is_end_token() or self.current_token.is_else_token() or self.current_token.is_eof_token()):
+        while True:
+            if self.current_token.is_end_token() or self.current_token.is_else_token() or self.current_token.is_eof_token():
+                break
             statement_node = self.parse_statement()
             if not statement_node:
                 return None
@@ -207,6 +209,7 @@ class Parser:
                 if not statement_node:
                     return None
                 node.add_else_statement(statement_node)
+
 
         end_token = self.current_token    
 
@@ -364,7 +367,6 @@ class Parser:
                     self.print_wrong_data_type_error()
                     return None
             self.match(True)
-            print(f"IN PARSE_FACTOR, STRINGNODE: {e}. NodeType: {e.node_type}")
             return e
         if self.current_token.is_left_parenthesis():
             self.new_current_token()
