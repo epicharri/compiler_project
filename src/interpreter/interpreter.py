@@ -30,7 +30,7 @@ class Interpreter(Visitor):
     def interpret(self):
         ast = self.parser.parse_program()
         if self.parser.errors_found > 0:
-          print("Since there are errors in the program, it is not executed.")
+          print("Since the program is not error free, it is not interpreted.")
           return False # Errors.
         if self.parser.scanner.parameters.print_ast:
             ast.pretty_print()
@@ -55,7 +55,14 @@ class Interpreter(Visitor):
             return self.raise_error(token, msg)
         return True
 
-
+    def to_mini_pl_type(self, value):
+        if isinstance(value, int):
+            return 'int'
+        if isinstance(value, str):
+            return 'string'
+        if isinstance(value, bool):
+            return 'bool'
+        return None
 
     def to_int(self, value: str):
         try:
@@ -85,7 +92,7 @@ class Interpreter(Visitor):
         elif data_type == 'int':
             int_value = self.to_int(read_value)
             while int_value == None:
-                print(f"The input '{read_value}' is not an integer. Please give an integer.")
+                print(f"The input '{read_value}' is not an integer. Please try again.")
                 read_value = ReadAndPrint.read()
                 int_value = self.to_int(read_value)
             self.parser.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, int_value, node)
@@ -200,7 +207,7 @@ class Interpreter(Visitor):
         operation_token = node.operation_token
         operation = operation_token.type
         if type(left_value) != type(right_value):
-            self.raise_error(operation_token, "The types of the binary operation are not the same.")
+            self.raise_error(operation_token, f"The expression has incompatible types. All types must be the same.")
             return
         if type(left_value) != type(True): # int and string are ok.
             if operation == 'PLUS':
@@ -220,13 +227,15 @@ class Interpreter(Visitor):
             return left_value == right_value
         if operation == 'SMALLER':
             return left_value < right_value
-        return self.raise_error(operation_token, "Incorrect binary operation operands.")
+        left_type = self.to_mini_pl_type(left_value)
+        right_type = self.to_mini_pl_type(right_value)
+        return self.raise_error(operation_token, f"Incompatible operand types for binary operation.")
         
 
     def visit_UnaryOperationNode(self, node: AST):
         value = self.visit(node.left)
         if type(value) != type(True):
-            self.raise_error(node.the_token(), "Not operation can be used only if the value is of type 'bool'.")
+            self.raise_error(node.the_token(), "The operation !:(bool) -> bool can be used only if the value is of type 'bool', not with type '{self.to_mini_pl_type(value)}'.")
             return
         if node.operation_token.type == 'NOT':
             return not value
