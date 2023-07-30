@@ -39,18 +39,19 @@ class Parser:
                 self.new_current_token()
                 break
             if self.current_token.is_eof_token():
-                print("The end of file reached without any semicolon after the error.")
+                print("The end of file reached without any semicolon after the error. ", end="")
                 if self.if_block_depth > 0 or self.for_loop_depth > 0:
-                    print("Notice that ", end="")
+                    print("This error might be caused by missing 'end for' or 'end if' keyword, because ", end="")
                     
                     if self.if_block_depth > 0:
                         print(f"the number of if blocks without 'end if' is {self.if_block_depth}", end="")
                         if self.for_loop_depth > 0:
                             print(", and ", end="")
                     if self.for_loop_depth > 0:
-                        print(f"the number of for loop blocks without 'end for' is {self.for_loop_depth}.")
-                    else:
-                        print(".\n")
+                        print(f"the number of for loop blocks without 'end for' is {self.for_loop_depth}", end="")
+                    print(".")
+                else:
+                    print("")
                 break
 
 
@@ -452,7 +453,7 @@ class Parser:
                     print(st)
                     print()
             
-                error_info_text = "No errors found."
+            error_info_text = "No errors found."
             if self.errors_found > 0:
                 error_info_text = f"Number of errors is {self.errors_found}."
                 print(f"END OF PARSING. {error_info_text} The last token is '{self.current_token.lexeme}'")

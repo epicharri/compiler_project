@@ -7,7 +7,7 @@ import sys
 
 def compiler():
     if len(sys.argv) == 1 or (len(sys.argv) >= 2 and sys.argv[1] == '--help'):
-        print("Mini-PL compiler. Copyright Harri Kähkönen 2023.\nTo interpret a program, give the file path of the source code file as the first parameter.\nOther parameters:\n --print-tokens\t\tTo print tokens during parsing.\n --print-ast\t\tTo print AST.\n --print-debug-info\tTo print information during debugging.\n --print-symbol-table\tTo print symbol table before and after interpreting the program.")
+        print("Mini-PL interpreter. Copyright Harri Kähkönen 2023.\nTo interpret a program, give the file path of the source code file as the first parameter.\nIn addition, you can use the following parameters:\n --print-tokens\t\tTo print tokens during parsing.\n --print-ast\t\tTo print AST.\n --print-debug-info\tTo print information during debugging.\n --print-symbol-table\tTo print symbol table after parsing, semantic analysis, and execution.")
         return True
     raw_data = read_file_to_string()
     if not raw_data:

@@ -26,7 +26,14 @@ class Interpreter(Visitor):
         super().__init__()
         self.parser = parser
         self.symbol_table = parser.symbol_table
+        self.running_after_semantic_analysis = False
     
+    def in_semantic_analysis(self):
+        return not self.running_after_semantic_analysis
+    
+    def in_execution(self):
+        return self.running_after_semantic_analysis
+
     def interpret(self):
         ast = self.parser.parse_program()
         if self.parser.errors_found > 0:
@@ -34,12 +41,22 @@ class Interpreter(Visitor):
           return False # Errors.
         if self.parser.scanner.parameters.print_ast:
             ast.pretty_print()
-            print(f"Symbol table after compilation\n{self.parser.symbol_table.symbol_table}")
+        if self.parser.scanner.parameters.print_symbol_table:
+            print(f"\nSymbol table created by parser\n{self.parser.symbol_table.symbol_table}")
 
         self.visit(ast)
+        if self.parser.scanner.parameters.print_symbol_table:
+            print(f"Symbol table after semantic analysis\n{self.parser.symbol_table.symbol_table}")
+        if self.errors_found > 0:
+            print("The semantic analysis showed errors. The program is not executed.")
+            return False
+        
+        self.running_after_semantic_analysis = True
+        self.visit(ast)
+
         if self.errors_found > 0:
             print("The execution of the program is stopped.")
-        if self.parser.scanner.parameters.print_ast:
+        if self.parser.scanner.parameters.print_symbol_table:
             print(f"Symbol table after execution\n{self.parser.symbol_table.symbol_table}")
 
     def raise_error(self, token: Token, msg: str):
@@ -71,6 +88,30 @@ class Interpreter(Visitor):
         except ValueError:
             return None
 
+    def read_input(self, data_type: str):
+        if self.in_semantic_analysis():
+            if data_type == 'string':
+                return ""
+            if data_type == 'int':
+                return 0;
+            return None
+        # In execution:
+        read_value = ReadAndPrint.read()
+        if data_type == 'string':
+            return read_value
+        elif data_type == 'int':
+            int_value = self.to_int(read_value)
+            while int_value == None:
+                print(f"The input '{read_value}' is not an integer. Please try again.")
+                read_value = self.read_input()
+                int_value = self.to_int(read_value)
+            return int_value
+
+    def print_output(self, value):
+        if self.in_execution():
+            ReadAndPrint.print(value)
+
+
     def visit_ProgramNode(self, node: AST):      
         for statement_node in node.statements:
             self.visit(statement_node)
@@ -85,17 +126,13 @@ class Interpreter(Visitor):
         symbol_table_entry = self.parser.symbol_table.exists_in_symbol_table(identifier_token)
         if symbol_table_entry == None:
             return self.raise_error(node.identifier_token, f"Identifier '{identifier}' is not declared.")
-        read_value = ReadAndPrint.read()
         data_type = symbol_table_entry.variable_type
-        if data_type == 'string':
-            self.parser.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, read_value, node)
-        elif data_type == 'int':
-            int_value = self.to_int(read_value)
-            while int_value == None:
-                print(f"The input '{read_value}' is not an integer. Please try again.")
-                read_value = ReadAndPrint.read()
-                int_value = self.to_int(read_value)
-            self.parser.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, int_value, node)
+        if data_type == 'bool': 
+            return self.raise_error(node.read_keyword_token, f"Trying to read an input into a bool variable '{identifier}'. It is not allowed.")
+
+        read_value = self.read_input(data_type)
+        if self.in_execution():
+            self.parser.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, read_value, node, self.in_execution())
 
     def visit_IdentifierNode(self, node: AST):
         value = self.symbol_table.get_value(node.identifier_token)
@@ -108,7 +145,7 @@ class Interpreter(Visitor):
         # visit the expression and print the value
         value = self.visit(node.expression_root)
         if self.value_is_correct(node.expression_root.the_token(), value, "Incorrect expression."):
-            ReadAndPrint.print(value)
+            self.print_output(value)
         return
 
 
@@ -119,8 +156,9 @@ class Interpreter(Visitor):
         identifier_token = node.identifier_token
         value = self.visit(node.variable_assignment_expression_root)
         if self.value_is_correct(identifier_token, value, "Incorrect expression."):
-            if self.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, value, node) == False:
-                self.raise_error(identifier_token, "")
+            if self.in_execution():
+                if self.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, value, node, self.in_execution()) == False:
+                    self.raise_error(identifier_token, "")
                 
         return
 
@@ -129,13 +167,14 @@ class Interpreter(Visitor):
         identifier_token = node.identifier_token
         value = self.visit(node.expression_root)
         if self.value_is_correct(node.expression_root.the_token(), value, "Incorrect expression."):
-            if self.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, value, node) == False:
-                self.raise_error(identifier_token, "")
+            if self.symbol_table.set_new_value_to_variable_in_symbol_table_entry(identifier_token, value, node, self.in_execution()) == False:
+                self.raise_error(identifier_token, f"Error occured while trying to set new value to variable {identifier_token.lexeme}.")
         return
 
     def raise_assertion_error(self, token: Token):
-        print(f"Assertion error in line {token.line_start}. The execution of the program is ended.")
-        self.errors_found += 1
+        if self.in_execution():
+            print(f"Assertion error in line {token.line_start}. The execution of the program is ended.")
+            self.errors_found += 1
         return
 
     def visit_AssertNode(self, node: AST):
@@ -172,15 +211,24 @@ class Interpreter(Visitor):
         if not symbol_table_entry.set_as_control_variable(node):
             self.raise_error(control_variable_token, f"The variable {control_variable_token.lexeme} is a control variable of another for loop.")
             return False
-        if not self.symbol_table.set_new_value_to_variable_in_symbol_table_entry(control_variable_token, range_start_value, node):
+        # if self.in_execution():
+        if not self.symbol_table.set_new_value_to_variable_in_symbol_table_entry(control_variable_token, range_start_value, node, self.in_execution()):
             return False
-        while symbol_table_entry.value <= range_end_value:
+        if self.in_semantic_analysis():
             for statement_node in node.statements:
                 self.visit(statement_node)
-            if not symbol_table_entry.increment_control_variable(node):
+            if not symbol_table_entry.increment_control_variable(node, self.in_execution()):
                 self.raise_error(control_variable_token, f"Error: It is forbidden to change the value of a for loop control variable.")
                 return False
-        symbol_table_entry.unset_as_control_variable(node)
+            symbol_table_entry.unset_as_control_variable(node)
+        else: # If in execution
+            while symbol_table_entry.value <= range_end_value:
+                for statement_node in node.statements:
+                    self.visit(statement_node)
+                if not symbol_table_entry.increment_control_variable(node, self.in_execution()):
+                    self.raise_error(control_variable_token, f"Error: It is forbidden to change the value of a for loop control variable.")
+                    return False
+            symbol_table_entry.unset_as_control_variable(node)
 
     def visit_IfNode(self, node: AST):
         if_token = node.if_token
@@ -191,14 +239,18 @@ class Interpreter(Visitor):
         if not isinstance(condition_value, bool):
             self.raise_error(if_token, "Type error in the condition expression of the if statement.")
             return False
-        if condition_value:
+        if self.in_execution():
+            if condition_value:
+                for statement_node in node.statements:
+                    self.visit(statement_node)
+            else:
+                for statement_node in node.else_statements:
+                    self.visit(statement_node)
+        else: # In semantical analysis
             for statement_node in node.statements:
-                self.visit(statement_node)
-        else:
+                self.visit(statement_node)            
             for statement_node in node.else_statements:
                 self.visit(statement_node)
-
-
 
 
     def visit_BinaryOperationNode(self, node: AST):
@@ -218,6 +270,8 @@ class Interpreter(Visitor):
             if operation == 'MUL':
                 return left_value * right_value
             if operation == 'DIV':
+                if self.in_semantic_analysis():
+                    return left_value # Do not check dividing by zero, because right value may be dependent on runtime execution.
                 if right_value == 0:
                     return self.raise_error(operation_token, "Divide by zero.")
                 return left_value // right_value

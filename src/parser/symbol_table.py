@@ -23,7 +23,13 @@ class SymbolTableEntry():
 
 
     def __repr__(self):
-        return f"({self.identifier}, {self.variable_type}, {self.value})"
+        control_variable_printout = ""
+        if self.is_control_variable:
+            control_variable_printout = ", is control variable"
+        if self.for_loop_node:
+            control_variable_printout += " of for loop with AST id {self.for_loop_node.get_id()}"
+        # control_variable_printout should not be visible after parsing, semantic analysis, or execution, provided all for loops have reached end for.
+        return f"({self.identifier}, {self.variable_type}, '{self.value}'{control_variable_printout})"
 
     def set_as_control_variable(self, for_loop_node: AST):
         if self.is_control_variable:
@@ -39,30 +45,22 @@ class SymbolTableEntry():
         else:
             return False
 
-    #@property
-    #def value(self):
-    #    return self._value
-
-    #@value.setter
-    #def value(self, new_value):
-    #    print("Do not use this for setting a value.")
-
-    #@value.setter
-    def set_value(self, new_value, for_loop_node: AST):
+    def set_value(self, new_value, for_loop_node: AST, in_execution: bool):
         if not self.is_correct_data_type(self.identifier_token, new_value):
             return False
         if (self.for_loop_node == None) or (for_loop_node == None) or (for_loop_node.get_id() == self.for_loop_node.get_id()):
-            self.value = new_value
+            if in_execution: # Otherwise in semantical analysis phase.
+                self.value = new_value
             return True # success
         else:
             control_variable_token = self.for_loop_node.control_variable_token
             print(f"Error: Trying to change the control variable '{control_variable_token.lexeme}' of the for loop which starts on line '{control_variable_token.line_start}'. The value of a for loop control variable is not allowed to be changed.")
             return False
 
-#    @value.setter
-    def increment_control_variable(self, for_loop_node: AST):
+    def increment_control_variable(self, for_loop_node: AST, in_execution: bool = None):
         if (self.for_loop_node == None) or (for_loop_node.get_id() == self.for_loop_node.get_id()):
-            self.value += 1
+            if in_execution:
+                self.value += 1
             return True
         return False
 
@@ -116,14 +114,14 @@ class SymbolTable():
         
 
 
-    def set_new_value_to_variable_in_symbol_table_entry(self, identifier_token: Token, value, node: AST) -> bool:
+    def set_new_value_to_variable_in_symbol_table_entry(self, identifier_token: Token, value, node: AST, in_execution: bool) -> bool:
 
         symbol_table_entry = self.symbol_table.get(identifier_token.lexeme)
 
         if symbol_table_entry is None:
             print(f"Error in line {identifier_token.line_start}. The identifier {identifier_token.lexeme} is not declared before the assignment.")
             return False
-        return symbol_table_entry.set_value(value, node)
+        return symbol_table_entry.set_value(value, node, in_execution)
 
     
         return True

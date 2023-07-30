@@ -19,7 +19,7 @@ class Parameters:
     def set_print_symbol_table(self):
         self.print_symbol_table = True
     
-    def print_debug_info(self, msg: str):
+    def print_debug_infos(self, msg: str):
         if self.print_debug_info:
             print(msg)
   

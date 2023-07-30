@@ -1,4 +1,4 @@
-print "This program gives a run time error, when the value of the control variable of the loop is tried to change inside the for loop.\n";
+// This program is for demonstration of the error catching during semantical analysis phase. In the program, the value of the control variable of the loop is tried to change inside the for loop. Therefore, the program will not be executed.
 
 var e : int; // We use variable e as a control variable.
 
