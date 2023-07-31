@@ -72,8 +72,7 @@ class Scanner:
 
     def scan_next_token(self):
         start_of_code_line = 0
-        if type(self.i) == str:
-            print(f"PANIC!!! self.i = {self.i}")
+        
         while self.i < len(self.raw_data):
             if is_newline(self.raw_data, self.i):
                 self.current_raw_data_line += 1

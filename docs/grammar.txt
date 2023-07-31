@@ -1,0 +1,24 @@
+<prog> ::= <stmts>
+<stmts> ::= <stmt> “;” ( <stmt> “;” )*
+<stmt> ::= “var” <var_ident> “:” <type> [ “:=” <expr> ]
+| <var_ident> “:=” <expr>
+| “for” <var_ident> “in” <expr> “..” <expr> “do” <stmts> “end” “for”
+| “read” <var_ident>
+| "assert" "(" <expr> ")"
+| “print” <expr>
+| “if” <expr> “do” <stmts> [ “else” <stmts> ] “end” “if”
+
+<expr> ::= <opnd> <expr_tail> | <unary_op> <opnd>
+<expr_tail> ::= <op> <opnd> | ε
+
+<opnd> ::= <int>
+| <string>
+| <var_ident>
+| “(” <expr> “)”
+
+<type> ::= “int” | “string” | “bool”
+<var_ident> ::= <ident>
+<reserved_keyword> ::=
+“var” | “for” | “end” | “in” | “do” | “read” |
+“print” | “int” | “string” | “bool” | “assert” |
+“if” | “else”

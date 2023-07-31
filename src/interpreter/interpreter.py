@@ -211,7 +211,7 @@ class Interpreter(Visitor):
         if not symbol_table_entry.set_as_control_variable(node):
             self.raise_error(control_variable_token, f"The variable {control_variable_token.lexeme} is a control variable of another for loop.")
             return False
-        # if self.in_execution():
+
         if not self.symbol_table.set_new_value_to_variable_in_symbol_table_entry(control_variable_token, range_start_value, node, self.in_execution()):
             return False
         if self.in_semantic_analysis():

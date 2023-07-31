@@ -2,6 +2,8 @@
 
 ## Mini-PL interpreter.
 
+The program should be runnable using the development tools available at the Computer Science department of University of Helsinki, because it is written and tested using the computer managed by CS department. In the computer, the newest version of Python is Python 3.6.9, and it is used for running the program.
+
 To interpret a program, give the file path of the source code file as the first parameter.
 
 For example:

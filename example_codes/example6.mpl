@@ -36,8 +36,12 @@ end for;
 var a_number : int := 1;
 var a_string : string := "";
 var a_bool : bool;
-a_bool := !(1=1) & (2=1) & ("H" = "H");
+a_bool := (!(1=1)) & (2=1);
 print a_bool;
+print "\n";
+a_bool := !((1=1) & (2=1) & ("H" = "H"));
+print a_bool;
+print "\n";
 
 var ep : int := 100;
 print (4 + (8 + (6 * 2) + 5)) * 100;
